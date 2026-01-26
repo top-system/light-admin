@@ -1,0 +1,43 @@
+# ============================================================================
+# 扩展功能配置示例
+# 将以下内容添加到 config.yaml 中即可启用对应功能
+# ============================================================================
+
+# ====== 任务队列配置 ======
+# 用于异步任务处理，如发送邮件、处理文件等
+Queue:
+  Enable: true          # 是否启用
+  Name: "default"       # 队列名称
+  WorkerNum: 4          # 工作线程数（建议设置为 CPU 核心数）
+  MaxRetry: 3           # 任务失败最大重试次数
+
+# ====== 定时任务配置 ======
+# 用于定时执行任务，如数据清理、报表生成等
+Crontab:
+  Enable: true          # 是否启用
+
+# ====== 下载器配置 ======
+# 用于管理 aria2/qBittorrent 下载任务
+Downloader:
+  Enable: true          # 是否启用
+  Type: "aria2"         # 下载器类型: aria2 或 qbittorrent
+
+  # aria2 配置（当 Type 为 aria2 时使用）
+  Aria2:
+    Server: "http://localhost:6800"   # aria2 RPC 服务器地址
+    Token: "your-secret-token"        # aria2 RPC 密钥
+    TempPath: "/tmp/downloads"        # 临时下载路径
+    Options:                          # aria2 额外选项
+      max-concurrent-downloads: 5
+      split: 16
+      min-split-size: "1M"
+
+  # qBittorrent 配置（当 Type 为 qbittorrent 时使用）
+  # QBittorrent:
+  #   Server: "http://localhost:8080"   # qBittorrent Web UI 地址
+  #   User: "admin"                     # 用户名
+  #   Password: "adminadmin"            # 密码
+  #   TempPath: "/tmp/downloads"        # 临时下载路径
+  #   Options:                          # qBittorrent 额外选项
+  #     sequentialDownload: "true"
+  #     firstLastPiecePrio: true

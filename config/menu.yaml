@@ -1,0 +1,295 @@
+---
+# 菜单配置初始化
+# type: 1-菜单 2-目录 3-外链 4-按钮
+# visible: 1-显示 0-隐藏
+
+- name: 控制台
+  type: 1
+  route_name: Dashboard
+  route_path: /dashboard
+  component: dashboard/index
+  icon: homepage
+  sort: 1
+  visible: 1
+
+- name: 系统管理
+  type: 2
+  route_name: System
+  route_path: /system
+  icon: setting
+  sort: 2
+  visible: 1
+  redirect: /system/user
+  children:
+    - name: 用户管理
+      type: 1
+      route_name: User
+      route_path: user
+      component: system/user/index
+      icon: user
+      sort: 1
+      visible: 1
+      children:
+        - name: 用户查询
+          type: 4
+          perm: sys:user:query
+          sort: 0
+        - name: 新增用户
+          type: 4
+          perm: sys:user:add
+          sort: 1
+        - name: 编辑用户
+          type: 4
+          perm: sys:user:edit
+          sort: 2
+        - name: 删除用户
+          type: 4
+          perm: sys:user:delete
+          sort: 3
+        - name: 重置密码
+          type: 4
+          perm: sys:user:reset-password
+          sort: 4
+        - name: 用户导入
+          type: 4
+          perm: sys:user:import
+          sort: 5
+        - name: 用户导出
+          type: 4
+          perm: sys:user:export
+          sort: 6
+
+    - name: 角色管理
+      type: 1
+      route_name: Role
+      route_path: role
+      component: system/role/index
+      icon: role
+      sort: 2
+      visible: 1
+      children:
+        - name: 角色查询
+          type: 4
+          perm: sys:role:query
+          sort: 0
+        - name: 新增角色
+          type: 4
+          perm: sys:role:add
+          sort: 1
+        - name: 编辑角色
+          type: 4
+          perm: sys:role:edit
+          sort: 2
+        - name: 删除角色
+          type: 4
+          perm: sys:role:delete
+          sort: 3
+
+    - name: 菜单管理
+      type: 1
+      route_name: Menu
+      route_path: menu
+      component: system/menu/index
+      icon: menu
+      sort: 3
+      visible: 1
+      children:
+        - name: 菜单查询
+          type: 4
+          perm: sys:menu:query
+          sort: 1
+        - name: 菜单新增
+          type: 4
+          perm: sys:menu:add
+          sort: 2
+        - name: 菜单编辑
+          type: 4
+          perm: sys:menu:edit
+          sort: 3
+        - name: 菜单删除
+          type: 4
+          perm: sys:menu:delete
+          sort: 4
+
+    - name: 部门管理
+      type: 1
+      route_name: Dept
+      route_path: dept
+      component: system/dept/index
+      icon: tree
+      sort: 4
+      visible: 1
+      children:
+        - name: 部门查询
+          type: 4
+          perm: sys:dept:query
+          sort: 1
+        - name: 部门新增
+          type: 4
+          perm: sys:dept:add
+          sort: 2
+        - name: 部门编辑
+          type: 4
+          perm: sys:dept:edit
+          sort: 3
+        - name: 部门删除
+          type: 4
+          perm: sys:dept:delete
+          sort: 4
+
+    - name: 字典管理
+      type: 1
+      route_name: Dict
+      route_path: dict
+      component: system/dict/index
+      icon: dict
+      sort: 5
+      visible: 1
+      children:
+        - name: 字典查询
+          type: 4
+          perm: sys:dict:query
+          sort: 1
+        - name: 字典新增
+          type: 4
+          perm: sys:dict:add
+          sort: 2
+        - name: 字典编辑
+          type: 4
+          perm: sys:dict:edit
+          sort: 3
+        - name: 字典删除
+          type: 4
+          perm: sys:dict:delete
+          sort: 4
+
+    - name: 字典项
+      type: 1
+      route_name: DictItem
+      route_path: dict-item
+      component: system/dict/dict-item
+      icon: dict
+      sort: 6
+      visible: 0
+      children:
+        - name: 字典项查询
+          type: 4
+          perm: sys:dict-item:query
+          sort: 1
+        - name: 字典项新增
+          type: 4
+          perm: sys:dict-item:add
+          sort: 2
+        - name: 字典项编辑
+          type: 4
+          perm: sys:dict-item:edit
+          sort: 3
+        - name: 字典项删除
+          type: 4
+          perm: sys:dict-item:delete
+          sort: 4
+
+    - name: 系统配置
+      type: 1
+      route_name: Config
+      route_path: config
+      component: system/config/index
+      icon: setting
+      sort: 7
+      visible: 1
+      children:
+        - name: 系统配置查询
+          type: 4
+          perm: sys:config:query
+          sort: 1
+        - name: 系统配置新增
+          type: 4
+          perm: sys:config:add
+          sort: 2
+        - name: 系统配置修改
+          type: 4
+          perm: sys:config:update
+          sort: 3
+        - name: 系统配置删除
+          type: 4
+          perm: sys:config:delete
+          sort: 4
+        - name: 系统配置刷新
+          type: 4
+          perm: sys:config:refresh
+          sort: 5
+
+    - name: 通知公告
+      type: 1
+      route_name: Notice
+      route_path: notice
+      component: system/notice/index
+      icon: bell
+      sort: 9
+      visible: 1
+      children:
+        - name: 通知查询
+          type: 4
+          perm: sys:notice:query
+          sort: 1
+        - name: 通知新增
+          type: 4
+          perm: sys:notice:add
+          sort: 2
+        - name: 通知编辑
+          type: 4
+          perm: sys:notice:edit
+          sort: 3
+        - name: 通知删除
+          type: 4
+          perm: sys:notice:delete
+          sort: 4
+        - name: 通知发布
+          type: 4
+          perm: sys:notice:publish
+          sort: 5
+        - name: 通知撤回
+          type: 4
+          perm: sys:notice:revoke
+          sort: 6
+
+    - name: 系统日志
+      type: 1
+      route_name: Log
+      route_path: log
+      component: system/log/index
+      icon: document
+      sort: 10
+      visible: 1
+      children:
+        - name: 日志查询
+          type: 4
+          perm: sys:log:query
+          sort: 1
+
+- name: 平台管理
+  type: 2
+  route_name: Platform
+  route_path: /platform
+  icon: folder
+  sort: 3
+  visible: 1
+  redirect: /platform/file
+  children:
+    - name: 文件管理
+      type: 1
+      route_name: File
+      route_path: file
+      component: platform/file/index
+      icon: upload
+      sort: 1
+      visible: 1
+      children:
+        - name: 文件上传
+          type: 4
+          perm: platform:file:upload
+          sort: 1
+        - name: 文件删除
+          type: 4
+          perm: platform:file:delete
+          sort: 2

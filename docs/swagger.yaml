@@ -1,0 +1,2425 @@
+basePath: /
+definitions:
+  dto.CaptchaVerify:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+    required:
+    - code
+    - id
+    type: object
+  dto.CurrentUserInfo:
+    properties:
+      avatar:
+        type: string
+      canSwitchTenant:
+        type: boolean
+      nickname:
+        type: string
+      perms:
+        items:
+          type: string
+        type: array
+      roles:
+        items:
+          type: string
+        type: array
+      userId:
+        type: integer
+      username:
+        type: string
+    type: object
+  dto.Login:
+    properties:
+      captchaCode:
+        type: string
+      captchaId:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - captchaCode
+    - captchaId
+    - password
+    - username
+    type: object
+  dto.MenuOption:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/dto.MenuOption'
+        type: array
+      label:
+        type: string
+      value:
+        type: integer
+    type: object
+  dto.NullDateTime:
+    properties:
+      time:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  dto.OrderDirection:
+    enum:
+    - ASC
+    - DESC
+    type: string
+    x-enum-varnames:
+    - OrderByASC
+    - OrderByDESC
+  dto.Pagination:
+    properties:
+      pageNum:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.RouteMeta:
+    properties:
+      alwaysShow:
+        description: 是否总是显示
+        type: boolean
+      hidden:
+        description: 是否隐藏
+        type: boolean
+      icon:
+        description: 菜单图标
+        type: string
+      keepAlive:
+        description: 是否缓存
+        type: boolean
+      params:
+        additionalProperties:
+          type: string
+        description: 路由参数
+        type: object
+      title:
+        description: 菜单标题
+        type: string
+    type: object
+  dto.RouteVO:
+    properties:
+      children:
+        description: 子路由
+        items:
+          $ref: '#/definitions/dto.RouteVO'
+        type: array
+      component:
+        description: 组件路径
+        type: string
+      meta:
+        allOf:
+        - $ref: '#/definitions/dto.RouteMeta'
+        description: 路由元信息
+      name:
+        description: 路由名称
+        type: string
+      path:
+        description: 路由路径
+        type: string
+      redirect:
+        description: 重定向路径
+        type: string
+    type: object
+  echox.PageInfo:
+    properties:
+      pageNum:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  echox.Response:
+    properties:
+      code:
+        type: string
+      data: {}
+      message: {}
+      page:
+        $ref: '#/definitions/echox.PageInfo'
+    type: object
+  platform.FileInfo:
+    properties:
+      name:
+        description: 文件名称
+        type: string
+      url:
+        description: 文件URL
+        type: string
+    type: object
+  system.Config:
+    properties:
+      configKey:
+        type: string
+      configName:
+        type: string
+      configValue:
+        type: string
+      createBy:
+        type: integer
+      createTime:
+        type: string
+      id:
+        type: integer
+      isDeleted:
+        type: integer
+      remark:
+        type: string
+      updateBy:
+        type: integer
+      updateTime:
+        type: string
+    type: object
+  system.ConfigForm:
+    properties:
+      configKey:
+        maxLength: 50
+        type: string
+      configName:
+        maxLength: 50
+        type: string
+      configValue:
+        maxLength: 100
+        type: string
+      id:
+        type: integer
+      remark:
+        maxLength: 255
+        type: string
+    required:
+    - configKey
+    - configName
+    - configValue
+    type: object
+  system.ConfigQueryResult:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/system.Config'
+        type: array
+      pagination:
+        $ref: '#/definitions/dto.Pagination'
+    type: object
+  system.DeptForm:
+    properties:
+      code:
+        maxLength: 100
+        type: string
+      id:
+        type: integer
+      name:
+        maxLength: 100
+        type: string
+      parentId:
+        type: integer
+      sort:
+        type: integer
+      status:
+        type: integer
+    required:
+    - code
+    - name
+    type: object
+  system.DeptOption:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/system.DeptOption'
+        type: array
+      label:
+        type: string
+      value:
+        type: integer
+    type: object
+  system.DeptVO:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/system.DeptVO'
+        type: array
+      code:
+        type: string
+      createTime:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      parentId:
+        type: integer
+      sort:
+        type: integer
+      status:
+        type: integer
+      updateTime:
+        type: string
+    type: object
+  system.DictForm:
+    properties:
+      dictCode:
+        maxLength: 100
+        type: string
+      id:
+        type: integer
+      name:
+        maxLength: 100
+        type: string
+      remark:
+        maxLength: 255
+        type: string
+      status:
+        type: integer
+    required:
+    - dictCode
+    - name
+    type: object
+  system.DictItem:
+    properties:
+      createBy:
+        type: integer
+      createTime:
+        type: string
+      dictCode:
+        type: string
+      id:
+        type: integer
+      isDeleted:
+        type: integer
+      label:
+        type: string
+      remark:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: integer
+      tagType:
+        type: string
+      updateBy:
+        type: integer
+      updateTime:
+        type: string
+      value:
+        type: string
+    type: object
+  system.DictItemForm:
+    properties:
+      dictCode:
+        type: string
+      id:
+        type: integer
+      label:
+        maxLength: 100
+        type: string
+      remark:
+        maxLength: 255
+        type: string
+      sort:
+        type: integer
+      status:
+        type: integer
+      tagType:
+        maxLength: 50
+        type: string
+      value:
+        maxLength: 100
+        type: string
+    required:
+    - label
+    - value
+    type: object
+  system.DictItemOptionVO:
+    properties:
+      label:
+        type: string
+      tagType:
+        type: string
+      value:
+        type: string
+    type: object
+  system.DictItemQueryResult:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/system.DictItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/dto.Pagination'
+    type: object
+  system.DictPageVO:
+    properties:
+      createTime:
+        type: string
+      dictCode:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      remark:
+        type: string
+      status:
+        type: integer
+    type: object
+  system.LogPageVO:
+    properties:
+      browser:
+        type: string
+      browserVersion:
+        type: string
+      city:
+        type: string
+      content:
+        type: string
+      createBy:
+        type: integer
+      createTime:
+        type: string
+      executionTime:
+        type: integer
+      id:
+        type: integer
+      ip:
+        type: string
+      module:
+        type: string
+      os:
+        type: string
+      province:
+        type: string
+      requestMethod:
+        type: string
+      requestUri:
+        type: string
+    type: object
+  system.MenuForm:
+    properties:
+      alwaysShow:
+        type: integer
+      component:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      keepAlive:
+        type: integer
+      name:
+        type: string
+      params:
+        type: string
+      parentId:
+        type: integer
+      perm:
+        type: string
+      redirect:
+        type: string
+      routeName:
+        type: string
+      routePath:
+        type: string
+      sort:
+        type: integer
+      type:
+        type: integer
+      visible:
+        type: integer
+    type: object
+  system.MenuTree:
+    properties:
+      alwaysShow:
+        type: integer
+      children:
+        items:
+          $ref: '#/definitions/system.MenuTree'
+        type: array
+      component:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      keepAlive:
+        type: integer
+      name:
+        type: string
+      params:
+        type: string
+      parentId:
+        type: integer
+      perm:
+        type: string
+      redirect:
+        type: string
+      routeName:
+        type: string
+      routePath:
+        type: string
+      sort:
+        type: integer
+      treePath:
+        type: string
+      type:
+        type: integer
+      visible:
+        type: integer
+    type: object
+  system.Notice:
+    properties:
+      content:
+        type: string
+      createBy:
+        type: integer
+      createTime:
+        type: string
+      id:
+        type: integer
+      isDeleted:
+        type: integer
+      level:
+        type: string
+      publishStatus:
+        type: integer
+      publishTime:
+        $ref: '#/definitions/dto.NullDateTime'
+      publisherId:
+        type: integer
+      revokeTime:
+        $ref: '#/definitions/dto.NullDateTime'
+      targetType:
+        type: integer
+      targetUserIds:
+        type: string
+      title:
+        type: string
+      type:
+        type: integer
+      updateBy:
+        type: integer
+      updateTime:
+        type: string
+    type: object
+  system.NoticeDetailVO:
+    properties:
+      content:
+        type: string
+      id:
+        type: integer
+      level:
+        type: string
+      publishTime:
+        $ref: '#/definitions/dto.NullDateTime'
+      publisherId:
+        type: integer
+      publisherName:
+        type: string
+      title:
+        type: string
+      type:
+        type: integer
+    type: object
+  system.NoticeForm:
+    properties:
+      content:
+        type: string
+      id:
+        type: integer
+      level:
+        type: string
+      targetType:
+        type: integer
+      targetUserIds:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 50
+        type: string
+      type:
+        type: integer
+    required:
+    - level
+    - targetType
+    - title
+    - type
+    type: object
+  system.Role:
+    properties:
+      code:
+        type: string
+      createBy:
+        type: integer
+      createTime:
+        type: string
+      dataScope:
+        type: integer
+      id:
+        type: integer
+      isDeleted:
+        type: integer
+      menuIds:
+        description: 非数据库字段
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: integer
+      updateBy:
+        type: integer
+      updateTime:
+        type: string
+    type: object
+  system.RoleOption:
+    properties:
+      label:
+        type: string
+      value:
+        type: integer
+    type: object
+  system.User:
+    properties:
+      avatar:
+        type: string
+      createBy:
+        type: integer
+      createTime:
+        type: string
+      deptId:
+        type: integer
+      deptName:
+        type: string
+      email:
+        type: string
+      gender:
+        type: integer
+      id:
+        type: integer
+      isDeleted:
+        type: integer
+      mobile:
+        type: string
+      nickname:
+        type: string
+      openid:
+        type: string
+      password:
+        type: string
+      roleIds:
+        description: 非数据库字段
+        items:
+          type: integer
+        type: array
+      status:
+        type: integer
+      updateBy:
+        type: integer
+      updateTime:
+        type: string
+      username:
+        type: string
+    type: object
+  system.UserForm:
+    properties:
+      avatar:
+        type: string
+      deptId:
+        type: integer
+      email:
+        type: string
+      gender:
+        type: integer
+      id:
+        type: integer
+      mobile:
+        type: string
+      nickname:
+        type: string
+      roleIds:
+        items:
+          type: integer
+        type: array
+      status:
+        type: integer
+      username:
+        type: string
+    type: object
+  system.UserNoticePageVO:
+    properties:
+      id:
+        type: integer
+      isRead:
+        type: integer
+      level:
+        type: string
+      noticeId:
+        type: integer
+      publishTime:
+        $ref: '#/definitions/dto.NullDateTime'
+      title:
+        type: string
+      type:
+        type: integer
+    type: object
+  system.UserOption:
+    properties:
+      label:
+        type: string
+      value:
+        type: integer
+    type: object
+host: localhost:2222
+info:
+  contact:
+    email: liusha@email.cn
+    name: LiuSha
+  description: Echo Admin 后台管理系统 API 文档
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://github.com/top-system/light-admin
+  title: Echo Admin API
+  version: "1.0"
+paths:
+  /api/v1/auth/captcha:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 获取验证码
+      tags:
+      - Auth
+  /api/v1/auth/captcha/verify:
+    post:
+      parameters:
+      - description: CaptchaVerify
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CaptchaVerify'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 验证验证码
+      tags:
+      - Auth
+  /api/v1/auth/login:
+    post:
+      parameters:
+      - description: Login
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 用户登录
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 用户登出
+      tags:
+      - Auth
+  /api/v1/configs:
+    get:
+      parameters:
+      - description: 关键词
+        in: query
+        name: keywords
+        type: string
+      - description: 当前页
+        in: query
+        name: current
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ConfigQueryResult'
+              type: object
+      summary: 分页查询系统配置
+      tags:
+      - Config
+    post:
+      parameters:
+      - description: 配置信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ConfigForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 创建系统配置
+      tags:
+      - Config
+  /api/v1/configs/{id}:
+    delete:
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 删除系统配置
+      tags:
+      - Config
+    put:
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 配置信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.ConfigForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 更新系统配置
+      tags:
+      - Config
+  /api/v1/configs/{id}/form:
+    get:
+      parameters:
+      - description: 配置ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.ConfigForm'
+              type: object
+      summary: 获取系统配置表单数据
+      tags:
+      - Config
+  /api/v1/configs/refresh:
+    put:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 刷新配置缓存
+      tags:
+      - Config
+  /api/v1/depts:
+    get:
+      parameters:
+      - description: 关键字
+        in: query
+        name: keywords
+        type: string
+      - description: 状态
+        in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.DeptVO'
+                  type: array
+              type: object
+      summary: 部门列表
+      tags:
+      - Dept
+    post:
+      parameters:
+      - description: 部门信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.DeptForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 新增部门
+      tags:
+      - Dept
+  /api/v1/depts/{deptId}:
+    put:
+      parameters:
+      - description: 部门ID
+        in: path
+        name: deptId
+        required: true
+        type: integer
+      - description: 部门信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.DeptForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 修改部门
+      tags:
+      - Dept
+  /api/v1/depts/{deptId}/form:
+    get:
+      parameters:
+      - description: 部门ID
+        in: path
+        name: deptId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.DeptForm'
+              type: object
+      summary: 获取部门表单数据
+      tags:
+      - Dept
+  /api/v1/depts/{ids}:
+    delete:
+      parameters:
+      - description: 部门ID，多个以英文逗号分割
+        in: path
+        name: ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 删除部门
+      tags:
+      - Dept
+  /api/v1/depts/options:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.DeptOption'
+                  type: array
+              type: object
+      summary: 部门下拉列表
+      tags:
+      - Dept
+  /api/v1/dicts:
+    get:
+      parameters:
+      - description: 关键字
+        in: query
+        name: keywords
+        type: string
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.DictPageVO'
+                  type: array
+              type: object
+      summary: 字典分页列表
+      tags:
+      - Dict
+    post:
+      parameters:
+      - description: 字典信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.DictForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 新增字典
+      tags:
+      - Dict
+  /api/v1/dicts/{dictCode}/items:
+    get:
+      parameters:
+      - description: 字典编码
+        in: path
+        name: dictCode
+        required: true
+        type: string
+      - description: 页码
+        in: query
+        name: pageNum
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.DictItemQueryResult'
+              type: object
+      summary: 字典项列表
+      tags:
+      - Dict
+    post:
+      parameters:
+      - description: 字典编码
+        in: path
+        name: dictCode
+        required: true
+        type: string
+      - description: 字典项信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.DictItemForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 新增字典项
+      tags:
+      - Dict
+  /api/v1/dicts/{dictCode}/items/{itemId}:
+    put:
+      parameters:
+      - description: 字典编码
+        in: path
+        name: dictCode
+        required: true
+        type: string
+      - description: 字典项ID
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      - description: 字典项信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.DictItemForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 修改字典项
+      tags:
+      - Dict
+  /api/v1/dicts/{dictCode}/items/{itemId}/form:
+    get:
+      parameters:
+      - description: 字典编码
+        in: path
+        name: dictCode
+        required: true
+        type: string
+      - description: 字典项ID
+        in: path
+        name: itemId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.DictItemForm'
+              type: object
+      summary: 获取字典项表单数据
+      tags:
+      - Dict
+  /api/v1/dicts/{dictCode}/items/{itemIds}:
+    delete:
+      parameters:
+      - description: 字典编码
+        in: path
+        name: dictCode
+        required: true
+        type: string
+      - description: 字典项ID，多个以英文逗号分割
+        in: path
+        name: itemIds
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 删除字典项
+      tags:
+      - Dict
+  /api/v1/dicts/{dictCode}/items/options:
+    get:
+      parameters:
+      - description: 字典编码
+        in: path
+        name: dictCode
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.DictItemOptionVO'
+                  type: array
+              type: object
+      summary: 字典项下拉选项
+      tags:
+      - Dict
+  /api/v1/dicts/{id}:
+    put:
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 字典信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.DictForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 修改字典
+      tags:
+      - Dict
+  /api/v1/dicts/{id}/form:
+    get:
+      parameters:
+      - description: 字典ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.DictForm'
+              type: object
+      summary: 获取字典表单数据
+      tags:
+      - Dict
+  /api/v1/dicts/{ids}:
+    delete:
+      parameters:
+      - description: 字典ID，多个以英文逗号分割
+        in: path
+        name: ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 删除字典
+      tags:
+      - Dict
+  /api/v1/files:
+    delete:
+      parameters:
+      - description: File path
+        in: query
+        name: filePath
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Delete File
+      tags:
+      - File
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/platform.FileInfo'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Upload File
+      tags:
+      - File
+  /api/v1/logs:
+    get:
+      parameters:
+      - in: query
+        name: createTimeFrom
+        type: string
+      - in: query
+        name: createTimeTo
+        type: string
+      - enum:
+        - ASC
+        - DESC
+        in: query
+        name: direction
+        type: string
+        x-enum-varnames:
+        - OrderByASC
+        - OrderByDESC
+      - in: query
+        name: key
+        type: string
+      - in: query
+        name: keywords
+        type: string
+      - in: query
+        name: module
+        type: string
+      - in: query
+        name: pageNum
+        type: integer
+      - in: query
+        maximum: 128
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.LogPageVO'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Log Query
+      tags:
+      - Log
+  /api/v1/menus:
+    get:
+      parameters:
+      - description: 搜索关键词
+        in: query
+        name: keywords
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.MenuTree'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Menu Query (Tree Structure)
+      tags:
+      - Menu
+    post:
+      parameters:
+      - description: Menu
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.MenuForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Menu Create
+      tags:
+      - Menu
+  /api/v1/menus/{id}:
+    delete:
+      parameters:
+      - description: menu id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Menu Delete By ID
+      tags:
+      - Menu
+    put:
+      parameters:
+      - description: menu id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Menu
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.MenuForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Menu Update By ID
+      tags:
+      - Menu
+  /api/v1/menus/{id}/form:
+    get:
+      parameters:
+      - description: menu id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.MenuForm'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get Menu Form Data
+      tags:
+      - Menu
+  /api/v1/menus/options:
+    get:
+      parameters:
+      - description: only parent menus
+        in: query
+        name: onlyParent
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MenuOption'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get Menu Options
+      tags:
+      - Menu
+  /api/v1/menus/routes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.RouteVO'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get Current User Routes
+      tags:
+      - Menu
+  /api/v1/notices:
+    get:
+      parameters:
+      - description: 标题
+        in: query
+        name: title
+        type: string
+      - description: 类型
+        in: query
+        name: type
+        type: integer
+      - description: 发布状态
+        in: query
+        name: publishStatus
+        type: integer
+      - description: 当前页
+        in: query
+        name: current
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.Notice'
+                  type: array
+              type: object
+      summary: 通知公告分页列表
+      tags:
+      - Notice
+    post:
+      parameters:
+      - description: 通知公告信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.NoticeForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 新增通知公告
+      tags:
+      - Notice
+  /api/v1/notices/{id}:
+    put:
+      parameters:
+      - description: 通知公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 通知公告信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.NoticeForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 修改通知公告
+      tags:
+      - Notice
+  /api/v1/notices/{id}/detail:
+    get:
+      parameters:
+      - description: 通知公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.NoticeDetailVO'
+              type: object
+      summary: 获取通知公告详情
+      tags:
+      - Notice
+  /api/v1/notices/{id}/form:
+    get:
+      parameters:
+      - description: 通知公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.NoticeForm'
+              type: object
+      summary: 获取通知公告表单数据
+      tags:
+      - Notice
+  /api/v1/notices/{id}/publish:
+    put:
+      parameters:
+      - description: 通知公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 发布通知公告
+      tags:
+      - Notice
+  /api/v1/notices/{id}/revoke:
+    put:
+      parameters:
+      - description: 通知公告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 撤回通知公告
+      tags:
+      - Notice
+  /api/v1/notices/{ids}:
+    delete:
+      parameters:
+      - description: 通知公告ID，多个以英文逗号分割
+        in: path
+        name: ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 删除通知公告
+      tags:
+      - Notice
+  /api/v1/notices/my-page:
+    get:
+      parameters:
+      - description: 标题
+        in: query
+        name: title
+        type: string
+      - description: 类型
+        in: query
+        name: type
+        type: integer
+      - description: 当前页
+        in: query
+        name: current
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.UserNoticePageVO'
+                  type: array
+              type: object
+      summary: 获取我的通知公告分页列表
+      tags:
+      - Notice
+  /api/v1/notices/read-all:
+    put:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: 全部已读
+      tags:
+      - Notice
+  /api/v1/roles:
+    get:
+      parameters:
+      - in: query
+        name: code
+        type: string
+      - enum:
+        - ASC
+        - DESC
+        in: query
+        name: direction
+        type: string
+        x-enum-varnames:
+        - OrderByASC
+        - OrderByDESC
+      - collectionFormat: csv
+        in: query
+        items:
+          type: integer
+        name: ids
+        type: array
+      - in: query
+        name: key
+        type: string
+      - in: query
+        name: name
+        type: string
+      - in: query
+        name: pageNum
+        type: integer
+      - in: query
+        maximum: 128
+        name: pageSize
+        type: integer
+      - in: query
+        name: queryValue
+        type: string
+      - in: query
+        name: status
+        type: integer
+      - in: query
+        name: userID
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.Role'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Role Query
+      tags:
+      - Role
+    post:
+      parameters:
+      - description: Role
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.Role'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Role Create
+      tags:
+      - Role
+  /api/v1/roles/{id}:
+    delete:
+      parameters:
+      - description: role id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Role Delete By ID
+      tags:
+      - Role
+    put:
+      parameters:
+      - description: role id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Role
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.Role'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Role Update By ID
+      tags:
+      - Role
+  /api/v1/roles/{id}/form:
+    get:
+      parameters:
+      - description: role id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.Role'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get Role Form Data
+      tags:
+      - Role
+  /api/v1/roles/{id}/menus:
+    get:
+      parameters:
+      - description: role id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    format: int64
+                    type: integer
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get Role Menu IDs
+      tags:
+      - Role
+    put:
+      parameters:
+      - description: role id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: menu ids
+        in: body
+        name: data
+        required: true
+        schema:
+          items:
+            type: integer
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Assign Menus To Role
+      tags:
+      - Role
+  /api/v1/roles/options:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.RoleOption'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Role Options
+      tags:
+      - Role
+  /api/v1/users:
+    get:
+      parameters:
+      - in: query
+        name: createTimeFrom
+        type: string
+      - in: query
+        name: createTimeTo
+        type: string
+      - in: query
+        name: deptID
+        type: integer
+      - enum:
+        - ASC
+        - DESC
+        in: query
+        name: direction
+        type: string
+        x-enum-varnames:
+        - OrderByASC
+        - OrderByDESC
+      - in: query
+        name: key
+        type: string
+      - in: query
+        name: keywords
+        type: string
+      - in: query
+        name: nickname
+        type: string
+      - in: query
+        name: pageNum
+        type: integer
+      - in: query
+        maximum: 128
+        name: pageSize
+        type: integer
+      - in: query
+        name: queryPassword
+        type: boolean
+      - in: query
+        name: queryValue
+        type: string
+      - collectionFormat: csv
+        in: query
+        items:
+          type: integer
+        name: roleIDs
+        type: array
+      - in: query
+        name: status
+        type: integer
+      - in: query
+        name: username
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.User'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: User Query
+      tags:
+      - User
+    post:
+      parameters:
+      - description: User
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: User Create
+      tags:
+      - User
+  /api/v1/users/{id}:
+    delete:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: User Delete By ID
+      tags:
+      - User
+    put:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/system.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: User Update By ID
+      tags:
+      - User
+  /api/v1/users/{id}/form:
+    get:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/system.UserForm'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get User Form By ID
+      tags:
+      - User
+  /api/v1/users/{id}/password/reset:
+    put:
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: new password
+        in: query
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Reset User Password
+      tags:
+      - User
+  /api/v1/users/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CurrentUserInfo'
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: Get Current User Info
+      tags:
+      - User
+  /api/v1/users/options:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            allOf:
+            - $ref: '#/definitions/echox.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/system.UserOption'
+                  type: array
+              type: object
+        "400":
+          description: bad request
+          schema:
+            $ref: '#/definitions/echox.Response'
+        "500":
+          description: internal error
+          schema:
+            $ref: '#/definitions/echox.Response'
+      summary: User Options
+      tags:
+      - User
+schemes:
+- http
+- https
+securityDefinitions:
+  Bearer:
+    description: 'JWT Authorization header using the Bearer scheme. Example: "Bearer
+      {token}"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

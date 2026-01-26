@@ -1,0 +1,78 @@
+Name: light-admin
+
+Log:
+  Level: debug
+  Format: console
+  Directory: ./logs
+  Development: true
+
+HTTP:
+  Host: 0.0.0.0
+  Port: 2222
+
+SuperAdmin:
+  Username: root
+  Realname: 超级管理员
+  Password: 123123
+
+Auth:
+  Enable: true
+  TokenExpired: 7200
+  IgnorePathPrefixes:
+    - /pprof
+    - /swagger
+    - /api/v1/auth/captcha
+    - /api/v1/auth/login
+
+Captcha:
+  Enable: false
+
+Casbin:
+  Enable: true
+  Debug: false
+  AutoLoad: false
+  AutoLoadInternal: 10
+  IgnorePathPrefixes:
+    - /pprof
+    - /swagger
+    - /api/v1/users/me
+    - /api/v1/menus/routes
+    - /api/v1/auth/captcha
+    - /api/v1/auth/login
+
+Redis:
+  Host: 172.16.217.2
+  Port: 6379
+  Password: redispass
+  KeyPrefix: r
+
+Database:
+  Engine: mysql
+  Name: clean
+  Host: 172.16.217.2
+  Port: 3306
+  Username: root
+  Password: sqlpass
+  TablePrefix: t
+  Parameters: charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true&timeout=5s
+  MaxLifetime: 7200
+  MaxOpenConns: 150
+  MaxIdleConns: 50
+
+# 对象存储配置
+# Type: local, minio, aliyun
+OSS:
+  Type: local
+  Local:
+    StoragePath: ./uploads
+  # Minio:
+  #   Endpoint: http://localhost:9000
+  #   AccessKey: minioadmin
+  #   SecretKey: minioadmin
+  #   BucketName: default
+  #   CustomDomain: ""
+  # Aliyun:
+  #   Endpoint: oss-cn-hangzhou.aliyuncs.com
+  #   AccessKeyID: your-access-key-id
+  #   AccessKeySecret: your-access-key-secret
+  #   BucketName: your-bucket-name
