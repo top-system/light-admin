@@ -8,4 +8,5 @@ var (
 	UserInvalidUsername  = New("invalid username")
 	UserAlreadyExists    = New("user already exists")
 	UserNoPermission     = New("user no permission")
+	UserCannotUpdate     = New("super admin cannot update profile")
 )

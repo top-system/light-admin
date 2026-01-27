@@ -9,9 +9,6 @@ import (
 // @description Echo Admin 后台管理系统 API 文档
 // @termsOfService https://github.com/top-system/light-admin
 
-// @contact.name LiuSha
-// @contact.email liusha@email.cn
-
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 

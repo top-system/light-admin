@@ -7,6 +7,7 @@ import (
 
 	"github.com/top-system/light-admin/api"
 	"github.com/top-system/light-admin/api/middlewares"
+	"github.com/top-system/light-admin/api/platform/controller"
 	"github.com/top-system/light-admin/errors"
 	"github.com/top-system/light-admin/lib"
 
@@ -28,6 +29,7 @@ func bootstrap(
 	config lib.Config,
 	middlewares middlewares.Middlewares,
 	database lib.Database,
+	websocketController controller.WebSocketController, // 注入 WebSocket 控制器
 ) {
 	db, err := database.ORM.DB()
 	if err != nil {
@@ -51,7 +53,25 @@ func bootstrap(
 				middlewares.Setup()
 				routes.Setup()
 
-				if err := handler.Engine.Start(config.Http.ListenAddr()); err != nil {
+				// 创建自定义 HTTP 处理器，在 Echo 之前拦截 WebSocket 请求
+				wsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// 拦截 /ws 请求，直接处理 WebSocket，不经过 Echo 中间件
+					if r.URL.Path == "/ws" {
+						logger.Zap.Info("WebSocket request intercepted, bypassing middleware")
+						websocketController.HandleWebSocket(w, r)
+						return
+					}
+					// 其他请求交给 Echo 处理
+					handler.Engine.ServeHTTP(w, r)
+				})
+
+				server := &http.Server{
+					Addr:    config.Http.ListenAddr(),
+					Handler: wsHandler,
+				}
+
+				logger.Zap.Infof("Starting server on %s", config.Http.ListenAddr())
+				if err := server.ListenAndServe(); err != nil {
 					if errors.Is(err, http.ErrServerClosed) {
 						logger.Zap.Debug("Shutting down the Application")
 					} else {

@@ -10,4 +10,5 @@ var Module = fx.Options(
 	fx.Provide(NewDatabase),
 	fx.Provide(NewRedis),
 	fx.Provide(NewCaptcha),
+	fx.Provide(NewWebSocket),
 )

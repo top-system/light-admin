@@ -83,6 +83,14 @@ func (a MenuService) Create(menu *system.Menu) (uint64, error) {
 
 func (a MenuService) CreateMenus(parentID uint64, mTrees system.MenuTrees) error {
 	for _, mTree := range mTrees {
+		// 处理 visible 字段：nil 时默认为 1（按钮除外），显式设置时使用设置的值
+		visible := 1
+		if mTree.Visible != nil {
+			visible = *mTree.Visible
+		} else if mTree.Type.Value() == constants.MenuTypeButton {
+			visible = 0
+		}
+
 		menu := &system.Menu{
 			ParentID:   parentID,
 			Name:       mTree.Name,
@@ -93,16 +101,11 @@ func (a MenuService) CreateMenus(parentID uint64, mTrees system.MenuTrees) error
 			Perm:       mTree.Perm,
 			AlwaysShow: mTree.AlwaysShow,
 			KeepAlive:  mTree.KeepAlive,
-			Visible:    mTree.Visible,
+			Visible:    visible,
 			Sort:       mTree.Sort,
 			Icon:       mTree.Icon,
 			Redirect:   mTree.Redirect,
 			Params:     mTree.Params,
-		}
-
-		// Default visible to 1 if not set
-		if menu.Visible == 0 && mTree.Type.Value() != constants.MenuTypeButton {
-			menu.Visible = 1
 		}
 
 		menuID, err := a.Create(menu)

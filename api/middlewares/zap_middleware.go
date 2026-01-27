@@ -29,6 +29,11 @@ func (a ZapMiddleware) core() echo.MiddlewareFunc {
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
+			// 跳过 WebSocket 请求，WebSocket 会劫持响应
+			if ctx.Request().URL.Path == "/ws" {
+				return next(ctx)
+			}
+
 			start := time.Now()
 
 			if err := next(ctx); err != nil {

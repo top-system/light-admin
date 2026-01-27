@@ -44,6 +44,11 @@ func (a CoreMiddleware) core() echo.MiddlewareFunc {
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
+			// 跳过 WebSocket 请求，WebSocket 不需要数据库事务
+			if ctx.Request().URL.Path == "/ws" {
+				return next(ctx)
+			}
+
 			txHandle := a.db.ORM.Begin()
 			logger.Info("beginning database transaction")
 

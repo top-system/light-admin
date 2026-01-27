@@ -23,7 +23,11 @@ func (a CorsMiddleware) Setup() {
 	a.logger.Zap.Info("Setting up cors middleware")
 
 	a.handler.Engine.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"*"},
+		AllowOriginFunc: func(origin string) (bool, error) {
+			// 允许所有来源（开发环境）
+			// 生产环境应该配置具体的域名白名单
+			return true, nil
+		},
 		AllowCredentials: true,
 		AllowHeaders:     []string{"*"},
 		AllowMethods:     []string{"*"},

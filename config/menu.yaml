@@ -3,15 +3,6 @@
 # type: 1-菜单 2-目录 3-外链 4-按钮
 # visible: 1-显示 0-隐藏
 
-- name: 控制台
-  type: 1
-  route_name: Dashboard
-  route_path: /dashboard
-  component: dashboard/index
-  icon: homepage
-  sort: 1
-  visible: 1
-
 - name: 系统管理
   type: 2
   route_name: System
@@ -259,37 +250,197 @@
       route_path: log
       component: system/log/index
       icon: document
-      sort: 10
+      sort: 7
       visible: 1
+      keep_alive: 1
       children:
         - name: 日志查询
           type: 4
           perm: sys:log:query
           sort: 1
 
-- name: 平台管理
+- name: 组件封装
   type: 2
-  route_name: Platform
-  route_path: /platform
-  icon: folder
-  sort: 3
+  route_name: Component
+  route_path: /component
+  icon: menu
+  sort: 6
   visible: 1
-  redirect: /platform/file
   children:
-    - name: 文件管理
+    - name: 增删改查
       type: 1
-      route_name: File
-      route_path: file
-      component: platform/file/index
-      icon: upload
+      route_name: Curd
+      route_path: curd
+      component: demo/curd/index
+      sort: 0
+      visible: 1
+    - name: 列表选择器
+      type: 1
+      route_name: TableSelect
+      route_path: table-select
+      component: demo/table-select/index
       sort: 1
       visible: 1
+    - name: 自适应表格操作列
+      type: 1
+      route_name: AutoOperationColumn
+      route_path: operation-column
+      component: demo/auto-operation-column
+      sort: 1
+      visible: 1
+    - name: 富文本编辑器
+      type: 1
+      route_name: WangEditor
+      route_path: wang-editor
+      component: demo/wang-editor
+      sort: 2
+      visible: 1
+    - name: 图片上传
+      type: 1
+      route_name: Upload
+      route_path: upload
+      component: demo/upload
+      sort: 3
+      visible: 1
+    - name: 图标选择器
+      type: 1
+      route_name: IconSelect
+      route_path: icon-select
+      component: demo/icon-select
+      sort: 4
+      visible: 1
+    - name: 字典组件
+      type: 1
+      route_name: DictDemo
+      route_path: dict-demo
+      component: demo/dictionary
+      sort: 4
+      visible: 1
+    - name: 拖拽组件
+      type: 1
+      route_name: Drag
+      route_path: drag
+      component: demo/drag
+      sort: 5
+      visible: 0
+    - name: 滚动文本
+      type: 1
+      route_name: TextScroll
+      route_path: text-scroll
+      component: demo/text-scroll
+      sort: 6
+      visible: 0
+
+- name: 功能演示
+  type: 2
+  route_name: Function
+  route_path: /function
+  icon: menu
+  sort: 7
+  visible: 1
+  children:
+    - name: Websocket
+      type: 1
+      route_name: WebSocket
+      route_path: websocket
+      component: demo/websocket
+      sort: 1
+      visible: 1
+    - name: Icons
+      type: 1
+      route_name: IconDemo
+      route_path: icon-demo
+      component: demo/icons
+      icon: el-icon-Notification
+      sort: 2
+      visible: 1
+    - name: 字典实时同步
+      type: 1
+      route_name: DictSync
+      route_path: dict-sync
+      component: demo/dict-sync
+      sort: 3
+      visible: 0
+    - name: VxeTable
+      type: 1
+      route_name: VxeTable
+      route_path: vxe-table
+      component: demo/vxe-table/index
+      icon: el-icon-MagicStick
+      sort: 4
+      visible: 1
+    - name: CURD单文件
+      type: 1
+      route_name: CurdSingle
+      route_path: curd-single
+      component: demo/curd-single
+      icon: el-icon-Reading
+      sort: 5
+      visible: 1
+
+- name: 多级菜单
+  type: 2
+  route_name: MultiLevel
+  route_path: /multi-level
+  icon: cascader
+  sort: 8
+  visible: 1
+  always_show: 1
+  children:
+    - name: 菜单一级
+      type: 2
+      route_path: multi-level1
+      sort: 1
+      visible: 1
+      always_show: 1
       children:
-        - name: 文件上传
-          type: 4
-          perm: platform:file:upload
+        - name: 菜单二级
+          type: 2
+          route_path: multi-level2
           sort: 1
-        - name: 文件删除
-          type: 4
-          perm: platform:file:delete
-          sort: 2
+          visible: 1
+          always_show: 0
+          children:
+            - name: 菜单三级-1
+              type: 1
+              route_path: multi-level3-1
+              component: demo/multi-level/children/children/level3-1
+              sort: 1
+              visible: 1
+              keep_alive: 1
+            - name: 菜单三级-2
+              type: 1
+              route_path: multi-level3-2
+              component: demo/multi-level/children/children/level3-2
+              sort: 2
+              visible: 1
+              keep_alive: 1
+
+- name: 路由参数
+  type: 2
+  route_name: RouteParam
+  route_path: /route-param
+  icon: el-icon-ElementPlus
+  sort: 9
+  visible: 1
+  children:
+    - name: 参数(type=1)
+      type: 1
+      route_name: RouteParamType1
+      route_path: route-param-type1
+      component: demo/route-param
+      icon: el-icon-Star
+      sort: 1
+      visible: 1
+      keep_alive: 1
+      params: '{"type": "1"}'
+    - name: 参数(type=2)
+      type: 1
+      route_name: RouteParamType2
+      route_path: route-param-type2
+      component: demo/route-param
+      icon: el-icon-StarFilled
+      sort: 2
+      visible: 1
+      keep_alive: 1
+      params: '{"type": "2"}'

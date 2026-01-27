@@ -50,7 +50,7 @@ type MenuTree struct {
 	Perm       string       `yaml:"perm,omitempty" json:"perm,omitempty"`
 	AlwaysShow int          `yaml:"always_show,omitempty" json:"alwaysShow,omitempty"`
 	KeepAlive  int          `yaml:"keep_alive,omitempty" json:"keepAlive,omitempty"`
-	Visible    int          `yaml:"visible,omitempty" json:"visible"`
+	Visible    *int         `yaml:"visible" json:"visible"`
 	Sort       int          `yaml:"sort" json:"sort"`
 	Icon       string       `yaml:"icon,omitempty" json:"icon,omitempty"`
 	Redirect   string       `yaml:"redirect,omitempty" json:"redirect,omitempty"`
@@ -201,6 +201,7 @@ func (a Menus) ToIDs() []uint64 {
 func (a Menus) ToMenuTrees() MenuTrees {
 	menuTrees := make(MenuTrees, len(a))
 	for i, menu := range a {
+		visible := menu.Visible
 		menuTrees[i] = &MenuTree{
 			ID:         menu.ID,
 			ParentID:   menu.ParentID,
@@ -213,7 +214,7 @@ func (a Menus) ToMenuTrees() MenuTrees {
 			Perm:       menu.Perm,
 			AlwaysShow: menu.AlwaysShow,
 			KeepAlive:  menu.KeepAlive,
-			Visible:    menu.Visible,
+			Visible:    &visible,
 			Sort:       menu.Sort,
 			Icon:       menu.Icon,
 			Redirect:   menu.Redirect,
@@ -228,6 +229,7 @@ func (a Menus) ToMenuTrees() MenuTrees {
 func (a Menus) ToFlatMenuTrees() MenuTrees {
 	menuTrees := make(MenuTrees, len(a))
 	for i, menu := range a {
+		visible := menu.Visible
 		menuTrees[i] = &MenuTree{
 			ID:         menu.ID,
 			ParentID:   menu.ParentID,
@@ -240,7 +242,7 @@ func (a Menus) ToFlatMenuTrees() MenuTrees {
 			Perm:       menu.Perm,
 			AlwaysShow: menu.AlwaysShow,
 			KeepAlive:  menu.KeepAlive,
-			Visible:    menu.Visible,
+			Visible:    &visible,
 			Sort:       menu.Sort,
 			Icon:       menu.Icon,
 			Redirect:   menu.Redirect,

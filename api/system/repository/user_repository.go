@@ -159,3 +159,34 @@ func (a UserRepository) UpdatePassword(id uint64, password string) error {
 
 	return nil
 }
+
+func (a UserRepository) UpdateProfile(id uint64, profile *system.ProfileForm) error {
+	updates := make(map[string]interface{})
+
+	if profile.Nickname != "" {
+		updates["nickname"] = profile.Nickname
+	}
+	if profile.Gender > 0 {
+		updates["gender"] = profile.Gender
+	}
+	if profile.Avatar != "" {
+		updates["avatar"] = profile.Avatar
+	}
+	if profile.Mobile != "" {
+		updates["mobile"] = profile.Mobile
+	}
+	if profile.Email != "" {
+		updates["email"] = profile.Email
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	result := a.db.ORM.Model(&system.User{}).Where("id=?", id).Updates(updates)
+	if result.Error != nil {
+		return errors.Wrap(errors.DatabaseInternalError, result.Error.Error())
+	}
+
+	return nil
+}

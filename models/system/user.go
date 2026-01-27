@@ -98,6 +98,15 @@ type UserOption struct {
 	Label string `json:"label"`
 }
 
+// ProfileForm 用户资料表单（用户自己更新资料）
+type ProfileForm struct {
+	Nickname string `json:"nickname"`
+	Gender   int    `json:"gender"`
+	Avatar   string `json:"avatar"`
+	Mobile   string `json:"mobile"`
+	Email    string `json:"email"`
+}
+
 // ToOptions 转换为下拉选项列表
 func (a Users) ToOptions() []*UserOption {
 	options := make([]*UserOption, len(a))

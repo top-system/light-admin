@@ -10,15 +10,17 @@ import (
 	"github.com/top-system/light-admin/api/system/service"
 	"github.com/top-system/light-admin/constants"
 	"github.com/top-system/light-admin/lib"
-	"github.com/top-system/light-admin/models/system"
 	"github.com/top-system/light-admin/models/dto"
+	"github.com/top-system/light-admin/models/system"
 	"github.com/top-system/light-admin/pkg/echox"
+	ws "github.com/top-system/light-admin/pkg/websocket"
 )
 
 type DictController struct {
 	dictService     service.DictService
 	dictItemService service.DictItemService
 	logger          lib.Logger
+	websocket       *ws.WebSocket
 }
 
 // NewDictController creates new dict controller
@@ -26,11 +28,13 @@ func NewDictController(
 	dictService service.DictService,
 	dictItemService service.DictItemService,
 	logger lib.Logger,
+	websocket *ws.WebSocket,
 ) DictController {
 	return DictController{
 		dictService:     dictService,
 		dictItemService: dictItemService,
 		logger:          logger,
+		websocket:       websocket,
 	}
 }
 
@@ -112,6 +116,9 @@ func (a DictController) SaveDict(ctx echo.Context) error {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
 	}
 
+	// 发送字典更新通知
+	a.websocket.BroadcastDictChange(form.DictCode)
+
 	return echox.Response{Code: http.StatusOK}.JSON(ctx)
 }
 
@@ -145,6 +152,11 @@ func (a DictController) UpdateDict(ctx echo.Context) error {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
 	}
 
+	// 发送字典更新通知
+	if form.DictCode != "" {
+		a.websocket.BroadcastDictChange(form.DictCode)
+	}
+
 	return echox.Response{Code: http.StatusOK}.JSON(ctx)
 }
 
@@ -158,6 +170,12 @@ func (a DictController) UpdateDict(ctx echo.Context) error {
 func (a DictController) DeleteDict(ctx echo.Context) error {
 	ids := ctx.Param("ids")
 
+	// 先获取字典编码列表，用于发送删除通知
+	dictCodes, err := a.dictService.GetDictCodesByIds(ids)
+	if err != nil {
+		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
+	}
+
 	claims, _ := ctx.Get(constants.CurrentUser).(*dto.JwtClaims)
 	var deletedBy uint64
 	if claims != nil {
@@ -167,6 +185,11 @@ func (a DictController) DeleteDict(ctx echo.Context) error {
 	trxHandle := ctx.Get(constants.DBTransaction).(*gorm.DB)
 	if err := a.dictService.WithTrx(trxHandle).DeleteDictByIds(ids, deletedBy); err != nil {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
+	}
+
+	// 发送字典删除通知
+	for _, dictCode := range dictCodes {
+		a.websocket.BroadcastDictChange(dictCode)
 	}
 
 	return echox.Response{Code: http.StatusOK}.JSON(ctx)
@@ -276,6 +299,9 @@ func (a DictController) SaveDictItem(ctx echo.Context) error {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
 	}
 
+	// 发送字典更新通知
+	a.websocket.BroadcastDictChange(dictCode)
+
 	return echox.Response{Code: http.StatusOK}.JSON(ctx)
 }
 
@@ -312,6 +338,9 @@ func (a DictController) UpdateDictItem(ctx echo.Context) error {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
 	}
 
+	// 发送字典更新通知
+	a.websocket.BroadcastDictChange(dictCode)
+
 	return echox.Response{Code: http.StatusOK}.JSON(ctx)
 }
 
@@ -324,6 +353,7 @@ func (a DictController) UpdateDictItem(ctx echo.Context) error {
 // @Success 200 {object} echox.Response "ok"
 // @Router /api/v1/dicts/{dictCode}/items/{itemIds} [delete]
 func (a DictController) DeleteDictItem(ctx echo.Context) error {
+	dictCode := ctx.Param("dictCode")
 	itemIds := ctx.Param("itemIds")
 
 	claims, _ := ctx.Get(constants.CurrentUser).(*dto.JwtClaims)
@@ -336,6 +366,9 @@ func (a DictController) DeleteDictItem(ctx echo.Context) error {
 	if err := a.dictItemService.WithTrx(trxHandle).DeleteDictItemByIds(itemIds, deletedBy); err != nil {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
 	}
+
+	// 发送字典更新通知
+	a.websocket.BroadcastDictChange(dictCode)
 
 	return echox.Response{Code: http.StatusOK}.JSON(ctx)
 }

@@ -212,9 +212,23 @@ func (a UserService) GetCurrentUserInfo(ID uint64, username string) (*dto.Curren
 		Username:        user.Username,
 		Nickname:        user.Nickname,
 		Avatar:          user.Avatar,
+		Gender:          user.Gender,
+		Mobile:          user.Mobile,
+		Email:           user.Email,
+		CreateTime:      user.CreateTime,
 		CanSwitchTenant: false,
 		Roles:           []string{},
 		Perms:           []string{},
+	}
+
+	// 获取部门名称
+	if user.DeptID > 0 {
+		deptMap, err := a.deptRepository.GetByIDs([]uint64{user.DeptID})
+		if err == nil {
+			if dept, ok := deptMap[user.DeptID]; ok {
+				info.DeptName = dept.Name
+			}
+		}
 	}
 
 	// 获取用户角色
@@ -475,4 +489,19 @@ func (a UserService) ListUserOptions() ([]*system.UserOption, error) {
 	}
 
 	return qr.List.ToOptions(), nil
+}
+
+// UpdateProfile 更新用户个人资料
+func (a UserService) UpdateProfile(id uint64, username string, profile *system.ProfileForm) error {
+	// 超级管理员不支持更新资料（配置文件用户）
+	if a.IsSuperAdmin(username) {
+		return errors.UserCannotUpdate
+	}
+
+	_, err := a.userRepository.Get(id)
+	if err != nil {
+		return err
+	}
+
+	return a.userRepository.UpdateProfile(id, profile)
 }
