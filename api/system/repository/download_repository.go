@@ -198,8 +198,8 @@ func (a DownloadRepository) GetStatusCounts() (*system.DownloadTaskStatsVO, erro
 func (a DownloadRepository) GetActiveTaskIDs() ([]system.DownloadTask, error) {
 	var tasks []system.DownloadTask
 	result := a.db.ORM.Model(&system.DownloadTask{}).
-		Where("status IN ?", []string{"downloading", "seeding", "unknown"}).
-		Select("id, task_id, hash, downloader").
+		Where("status IN ?", []string{"downloading", "seeding", "unknown", "queued"}).
+		Select("id, queue_task_id, task_id, hash, downloader").
 		Find(&tasks)
 
 	if result.Error != nil {
@@ -207,4 +207,51 @@ func (a DownloadRepository) GetActiveTaskIDs() ([]system.DownloadTask, error) {
 	}
 
 	return tasks, nil
+}
+
+// GetByQueueTaskID 根据队列任务ID获取下载任务
+func (a DownloadRepository) GetByQueueTaskID(queueTaskID uint64) (*system.DownloadTask, error) {
+	task := new(system.DownloadTask)
+
+	if ok, err := QueryOne(a.db.ORM.Model(task).Where("queue_task_id=?", queueTaskID), task); err != nil {
+		return nil, errors.Wrap(errors.DatabaseInternalError, err.Error())
+	} else if !ok {
+		return nil, errors.DatabaseRecordNotFound
+	}
+
+	return task, nil
+}
+
+// UpdateFromDownloader 从下载器同步更新任务完整信息
+func (a DownloadRepository) UpdateFromDownloader(id uint64, taskID, hash, name, savePath, status string, downloaded, total, downloadSpeed, uploaded, uploadSpeed int64, errorMessage string) error {
+	updates := map[string]interface{}{
+		"status":         status,
+		"downloaded":     downloaded,
+		"total":          total,
+		"download_speed": downloadSpeed,
+		"uploaded":       uploaded,
+		"upload_speed":   uploadSpeed,
+		"error_message":  errorMessage,
+	}
+
+	// 只在有值时更新这些字段
+	if taskID != "" {
+		updates["task_id"] = taskID
+	}
+	if hash != "" {
+		updates["hash"] = hash
+	}
+	if name != "" {
+		updates["name"] = name
+	}
+	if savePath != "" {
+		updates["save_path"] = savePath
+	}
+
+	result := a.db.ORM.Model(&system.DownloadTask{}).Where("id = ?", id).Updates(updates)
+	if result.Error != nil {
+		return errors.Wrap(errors.DatabaseInternalError, result.Error.Error())
+	}
+
+	return nil
 }

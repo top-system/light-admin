@@ -9,6 +9,7 @@ import (
 // PermissionService 基于 perm 标识的权限服务
 type PermissionService struct {
 	logger             lib.Logger
+	cache              PermissionCache
 	menuRepository     repository.MenuRepository
 	roleMenuRepository repository.RoleMenuRepository
 	userRoleRepository repository.UserRoleRepository
@@ -18,6 +19,7 @@ type PermissionService struct {
 // NewPermissionService creates a new permission service
 func NewPermissionService(
 	logger lib.Logger,
+	cache PermissionCache,
 	menuRepository repository.MenuRepository,
 	roleMenuRepository repository.RoleMenuRepository,
 	userRoleRepository repository.UserRoleRepository,
@@ -25,6 +27,7 @@ func NewPermissionService(
 ) PermissionService {
 	return PermissionService{
 		logger:             logger,
+		cache:              cache,
 		menuRepository:     menuRepository,
 		roleMenuRepository: roleMenuRepository,
 		userRoleRepository: userRoleRepository,
@@ -57,19 +60,33 @@ func (a PermissionService) HasPerm(roleIDs []uint64, perm string) (bool, error) 
 	return false, nil
 }
 
-// GetUserRoleIDs 获取用户的角色ID列表
+// GetUserRoleIDs 获取用户的角色ID列表（带缓存）
 func (a PermissionService) GetUserRoleIDs(userID uint64) ([]uint64, error) {
-	return a.userRoleRepository.GetRoleIDsByUserID(userID)
+	return a.cache.GetUserRoleIDs(userID)
 }
 
-// GetUserPerms 获取用户的所有权限标识
+// GetUserPerms 获取用户的所有权限标识（带缓存）
 func (a PermissionService) GetUserPerms(userID uint64) ([]string, error) {
+	// 尝试从缓存获取
+	if perms, ok := a.cache.GetUserPerms(userID); ok {
+		return perms, nil
+	}
+
+	// 从数据库获取
 	roleIDs, err := a.GetUserRoleIDs(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return a.GetRolePerms(roleIDs)
+	perms, err := a.GetRolePerms(roleIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// 写入缓存
+	a.cache.SetUserPerms(userID, perms)
+
+	return perms, nil
 }
 
 // GetUserRoleCodes 获取用户的角色编码列表

@@ -56,6 +56,16 @@ func NewDatabase(config Config, logger Logger) Database {
 		logger.Zap.Fatalf("Error to open database connection: %v", err)
 	}
 
+	// Apply connection pool settings
+	sqlDB, err := db.DB()
+	if err != nil {
+		logger.Zap.Fatalf("Error to get underlying sql.DB: %v", err)
+	}
+
+	sqlDB.SetMaxIdleConns(config.Database.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(config.Database.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(config.Database.MaxLifetime) * time.Second)
+
 	if config.Log.Level == "debug" {
 		db = db.Debug()
 	}
@@ -98,7 +108,13 @@ func openSQLite(config Config, gormConfig *gorm.Config, logger Logger) (*gorm.DB
 		return nil, err
 	}
 
-	db, err := gorm.Open(sqlite.Open(dbPath), gormConfig)
+	// Add SQLite connection parameters for better concurrency
+	// _journal_mode=WAL: Enable Write-Ahead Logging for better concurrent access
+	// _busy_timeout=5000: Wait up to 5 seconds when database is locked
+	// _synchronous=NORMAL: Balance between safety and speed
+	dsn := dbPath + "?_journal_mode=WAL&_busy_timeout=5000&_synchronous=NORMAL"
+
+	db, err := gorm.Open(sqlite.Open(dsn), gormConfig)
 	if err != nil {
 		return nil, err
 	}

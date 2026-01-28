@@ -43,7 +43,8 @@ var StartCmd = &cobra.Command{
 			&system.Log{},
 
 			// 扩展功能模型 (可选)
-			&queue.TaskModel{}, // 任务队列
+			&queue.TaskModel{},    // 任务队列
+			&system.DownloadTask{}, // 下载任务
 		); err != nil {
 			logger.Zap.Fatalf("Error to migrate database: %v", err)
 		}

@@ -28,6 +28,8 @@ build.sh
 
 # CONFIG
 config/config.yaml
+config/extras.yaml
+config/menu.yaml
 
 # BUILD
 *./build
@@ -36,4 +38,5 @@ config/config.yaml
 .claude
 .git
 uploads
+data
 

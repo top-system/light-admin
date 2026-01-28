@@ -24,9 +24,6 @@ func init() {
 		"config/config.yaml", "this parameter is used to start the service application")
 	pf.StringVarP(&menuFile, "menu", "m",
 		"config/menu.yaml", "this parameter is used to set the initialized menu data.")
-
-	cobra.MarkFlagRequired(pf, "config")
-	cobra.MarkFlagRequired(pf, "menu")
 }
 
 var StartCmd = &cobra.Command{

@@ -241,7 +241,7 @@ func (a DownloadController) Delete(ctx echo.Context) error {
 		return echox.Response{Code: http.StatusBadRequest, Message: "Invalid task IDs"}.JSON(ctx)
 	}
 
-	if err := a.downloadService.BatchDelete(ids); err != nil {
+	if err := a.downloadService.BatchDelete(context.Background(), ids); err != nil {
 		return echox.Response{Code: http.StatusBadRequest, Message: err}.JSON(ctx)
 	}
 

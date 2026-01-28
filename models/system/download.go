@@ -9,7 +9,8 @@ import (
 // DownloadTask 下载任务模型
 type DownloadTask struct {
 	ID            uint64       `gorm:"primaryKey;autoIncrement" json:"id"`
-	TaskID        string       `gorm:"column:task_id;size:100;not null;index" json:"taskId"`
+	QueueTaskID   uint64       `gorm:"column:queue_task_id;index" json:"queueTaskId"` // 关联队列任务ID
+	TaskID        string       `gorm:"column:task_id;size:100;index" json:"taskId"`
 	Hash          string       `gorm:"column:hash;size:100;index" json:"hash"`
 	Name          string       `gorm:"column:name;size:500" json:"name"`
 	URL           string       `gorm:"column:url;type:text" json:"url"`
@@ -117,7 +118,7 @@ type DownloadTaskStatsVO struct {
 // DownloadTaskCreateForm 创建下载任务表单
 type DownloadTaskCreateForm struct {
 	URL        string                 `json:"url" validate:"required"`
-	Downloader string                 `json:"downloader" validate:"required"`
+	Downloader string                 `json:"downloader"` // 可选，不填则使用默认下载器
 	Options    map[string]interface{} `json:"options"`
 }
 

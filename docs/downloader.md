@@ -9,6 +9,7 @@
 - **文件选择**: 支持选择性下载（仅下载部分文件）
 - **状态追踪**: 实时获取下载进度、速度、状态等信息
 - **连接测试**: 测试与下载服务的连接状态
+- **队列集成**: 与任务队列深度整合，支持持久化、状态恢复、自动重试
 
 ## 支持的下载后端
 
@@ -420,6 +421,70 @@ pkg/downloader/
     └── types.go              # 类型定义
 ```
 
+## 与任务队列集成
+
+下载管理服务与任务队列系统深度整合，提供以下能力：
+
+### 架构设计
+
+```
+用户请求 -> DownloadService -> 创建 RemoteDownloadTask -> 提交到 Queue
+                                      |
+                                      v
+                              Queue Worker 执行
+                                      |
+                                      v
+                              调用 Downloader (aria2/qBittorrent)
+                                      |
+                                      v
+                              状态持久化到数据库
+```
+
+### RemoteDownloadTask
+
+`RemoteDownloadTask` 是下载任务的队列实现，包含以下状态：
+
+```go
+const (
+    StateNotStarted = "not_started" // 未开始
+    StateMonitor    = "monitor"     // 监控下载进度
+    StateSeeding    = "seeding"     // 做种中
+    StateCompleted  = "completed"   // 已完成
+)
+```
+
+### 使用示例
+
+```go
+// 创建下载任务（自动提交到队列）
+task, err := downloadService.Create(ctx, &system.DownloadTaskCreateForm{
+    URL:      "magnet:?xt=urn:btih:...",
+    SavePath: "/downloads",
+}, userID)
+
+// 任务会自动：
+// 1. 创建 RemoteDownloadTask
+// 2. 提交到任务队列
+// 3. 由 Worker 执行下载
+// 4. 状态自动同步到数据库
+```
+
+### 状态恢复
+
+服务重启后，队列会自动恢复未完成的下载任务：
+
+```yaml
+# config.yaml
+Queue:
+  Enable: true
+  WorkerNum: 2
+  MaxRetry: 3
+```
+
+任务状态保存在 `sys_tasks` 表的 `private_state` 字段中，包含：
+- 下载器任务 ID (Handle)
+- 当前下载状态
+
 ## 注意事项
 
 1. **aria2 安装**: 使用 aria2 前需要确保 aria2 已安装并启动 RPC 服务
@@ -435,6 +500,8 @@ pkg/downloader/
 4. **并发安全**: 所有客户端方法都是并发安全的
 
 5. **超时设置**: 建议为长时间运行的操作设置合适的 context 超时
+
+6. **队列依赖**: 下载管理功能依赖任务队列，请确保 `Queue.Enable: true`
 
 ## 错误处理
 

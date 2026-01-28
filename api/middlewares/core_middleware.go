@@ -49,6 +49,12 @@ func (a CoreMiddleware) core() echo.MiddlewareFunc {
 				return next(ctx)
 			}
 
+			// For SQLite: disable auto-transaction completely to avoid database locking
+			// SQLite has limited concurrency support and auto-transactions cause deadlocks
+			if lib.IsSQLite() {
+				return next(ctx)
+			}
+
 			txHandle := a.db.ORM.Begin()
 			logger.Info("beginning database transaction")
 

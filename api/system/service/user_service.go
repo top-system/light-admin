@@ -23,6 +23,7 @@ type UserService struct {
 	roleRepository     repository.RoleRepository
 	roleMenuRepository repository.RoleMenuRepository
 	deptRepository     repository.DeptRepository
+	permissionCache    PermissionCache
 }
 
 // NewUserService creates a new user service
@@ -35,6 +36,7 @@ func NewUserService(
 	roleMenuRepository repository.RoleMenuRepository,
 	menuRepository repository.MenuRepository,
 	deptRepository repository.DeptRepository,
+	permissionCache PermissionCache,
 ) UserService {
 	return UserService{
 		logger:             logger,
@@ -45,6 +47,7 @@ func NewUserService(
 		roleMenuRepository: roleMenuRepository,
 		menuRepository:     menuRepository,
 		deptRepository:     deptRepository,
+		permissionCache:    permissionCache,
 	}
 }
 
@@ -399,6 +402,9 @@ func (a UserService) Update(id uint64, user *system.User) error {
 		if err := a.assignRolesToUser(id, user.RoleIds); err != nil {
 			return err
 		}
+
+		// 清除用户权限缓存
+		a.permissionCache.InvalidateUserCache(id)
 	}
 
 	if err := a.userRepository.Update(id, user); err != nil {
@@ -429,6 +435,9 @@ func (a UserService) Delete(id uint64) error {
 	if err != nil {
 		return err
 	}
+
+	// 清除用户权限缓存
+	a.permissionCache.InvalidateUserCache(id)
 
 	if err := a.userRoleRepository.DeleteByUserID(id); err != nil {
 		return err

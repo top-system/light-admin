@@ -9,8 +9,8 @@ import (
 // DataScope: 数据权限范围
 type Role struct {
 	ID         uint64       `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name       string       `gorm:"column:name;size:64;not null;uniqueIndex:uk_name" json:"name"`
-	Code       string       `gorm:"column:code;size:32;not null;uniqueIndex:uk_code" json:"code"`
+	Name       string       `gorm:"column:name;size:64;not null;uniqueIndex:uk_role_name" json:"name"`
+	Code       string       `gorm:"column:code;size:32;not null;uniqueIndex:uk_role_code" json:"code"`
 	Sort       int          `gorm:"column:sort" json:"sort"`
 	Status     int          `gorm:"column:status;default:1" json:"status"`
 	DataScope  int          `gorm:"column:data_scope" json:"dataScope"`

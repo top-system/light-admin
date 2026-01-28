@@ -98,6 +98,11 @@ var (
 	taskFactories sync.Map
 )
 
+// Task type constants
+const (
+	RemoteDownloadTaskType = "remote_download"
+)
+
 func init() {
 	gob.Register(Progresses{})
 }
@@ -497,7 +502,10 @@ func saveTaskToRepository(ctx context.Context, task Task, newStatus Status, q *q
 	if task.Owner() != nil {
 		model.OwnerID = task.Owner().ID
 	}
-	model.CorrelationID = correlationIDFromContext(ctx)
+	// 保留任务自带的 CorrelationID，只有为空时才从 context 获取
+	if model.CorrelationID == uuid.Nil {
+		model.CorrelationID = correlationIDFromContext(ctx)
+	}
 
 	var err error
 

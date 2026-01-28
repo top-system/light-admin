@@ -6,8 +6,8 @@ import (
 	"github.com/top-system/light-admin/api/system/repository"
 	"github.com/top-system/light-admin/errors"
 	"github.com/top-system/light-admin/lib"
-	"github.com/top-system/light-admin/models/system"
 	"github.com/top-system/light-admin/models/dto"
+	"github.com/top-system/light-admin/models/system"
 )
 
 // RoleService service layer
@@ -17,6 +17,7 @@ type RoleService struct {
 	roleRepository     repository.RoleRepository
 	roleMenuRepository repository.RoleMenuRepository
 	menuRepository     repository.MenuRepository
+	permissionCache    PermissionCache
 }
 
 // NewRoleService creates a new role service
@@ -26,6 +27,7 @@ func NewRoleService(
 	roleRepository repository.RoleRepository,
 	roleMenuRepository repository.RoleMenuRepository,
 	menuRepository repository.MenuRepository,
+	permissionCache PermissionCache,
 ) RoleService {
 	return RoleService{
 		logger:             logger,
@@ -33,6 +35,7 @@ func NewRoleService(
 		roleRepository:     roleRepository,
 		roleMenuRepository: roleMenuRepository,
 		menuRepository:     menuRepository,
+		permissionCache:    permissionCache,
 	}
 }
 
@@ -146,6 +149,9 @@ func (a RoleService) Update(id uint64, role *system.Role) error {
 		return err
 	}
 
+	// 清除该角色相关用户的权限缓存
+	a.permissionCache.InvalidateRoleCache(id)
+
 	return nil
 }
 
@@ -164,6 +170,9 @@ func (a RoleService) Delete(id uint64) error {
 	} else if userQR.Pagination.Total > 0 {
 		return errors.RoleNotAllowDeleteWithUser
 	}
+
+	// 先清除该角色相关用户的权限缓存
+	a.permissionCache.InvalidateRoleCache(id)
 
 	// Delete role menu associations
 	if err := a.roleMenuRepository.DeleteByRoleID(id); err != nil {
@@ -203,7 +212,14 @@ func (a RoleService) AssignMenusToRole(roleID uint64, menuIDs []uint64) error {
 		return err
 	}
 
-	return a.assignMenusToRole(roleID, menuIDs)
+	if err := a.assignMenusToRole(roleID, menuIDs); err != nil {
+		return err
+	}
+
+	// 清除该角色相关用户的权限缓存
+	a.permissionCache.InvalidateRoleCache(roleID)
+
+	return nil
 }
 
 func (a RoleService) assignMenusToRole(roleID uint64, menuIDs []uint64) error {

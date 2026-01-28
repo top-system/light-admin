@@ -85,7 +85,7 @@ func main() {
 }
 ```
 
-### 2. 带数据库持久化
+### 2. 带数据库持久化（MySQL）
 
 ```go
 package main
@@ -130,6 +130,48 @@ func main() {
     q.Start()
 
     // ... 提交任务等操作
+}
+```
+
+### 2.1 使用 SQLite 持久化
+
+```go
+package main
+
+import (
+    "github.com/top-system/light-admin/pkg/queue"
+    "gorm.io/driver/sqlite"
+    "gorm.io/gorm"
+)
+
+func main() {
+    // 连接 SQLite 数据库（开启 WAL 模式提高并发性能）
+    dsn := "./data/app.db?_journal_mode=WAL&_busy_timeout=5000&_synchronous=NORMAL"
+    db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+    if err != nil {
+        panic(err)
+    }
+
+    // 自动迁移任务表
+    db.AutoMigrate(&queue.TaskModel{})
+
+    // 创建任务仓库
+    taskRepo := queue.NewGormTaskRepository(db)
+
+    // 创建日志记录器
+    logger := queue.NewDefaultLogger()
+
+    // 创建队列（SQLite 建议使用较少的 Worker）
+    q := queue.New(
+        logger,
+        taskRepo,
+        queue.NewTaskRegistry(),
+        queue.WithWorkerCount(2),
+        queue.WithName("sqlite-queue"),
+    )
+
+    q.Start()
+    // ...
 }
 ```
 
@@ -428,6 +470,8 @@ func (t *MyTask) Do(ctx context.Context) (queue.Status, error) {
 
 如果使用 GORM 持久化，任务表结构如下：
 
+### MySQL
+
 ```sql
 CREATE TABLE sys_tasks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -451,6 +495,33 @@ CREATE TABLE sys_tasks (
 );
 ```
 
+### SQLite
+
+```sql
+CREATE TABLE sys_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    correlation_id TEXT,
+    owner_id INTEGER,
+    private_state TEXT,
+    public_retry_count INTEGER DEFAULT 0,
+    public_executed_duration INTEGER DEFAULT 0,
+    public_error TEXT,
+    public_error_history TEXT,
+    public_resume_time INTEGER DEFAULT 0,
+    created_at DATETIME,
+    updated_at DATETIME,
+    deleted_at DATETIME
+);
+CREATE INDEX idx_sys_tasks_type ON sys_tasks(type);
+CREATE INDEX idx_sys_tasks_status ON sys_tasks(status);
+CREATE INDEX idx_sys_tasks_correlation_id ON sys_tasks(correlation_id);
+CREATE INDEX idx_sys_tasks_deleted_at ON sys_tasks(deleted_at);
+```
+
+> **注意**: 使用 GORM AutoMigrate 会自动创建表结构，无需手动执行 SQL。
+
 ## 最佳实践
 
 1. **任务幂等性**: 确保任务可以安全地重试，即使执行多次也不会产生副作用。
@@ -462,3 +533,84 @@ CREATE TABLE sys_tasks (
 4. **优雅关闭**: 调用 `Shutdown()` 会等待当前正在执行的任务完成。
 
 5. **错误分类**: 区分可重试和不可重试的错误，使用 `CriticalErr` 标记不应重试的错误。
+
+6. **SQLite 注意事项**: 使用 SQLite 时建议减少 Worker 数量（2-4个），并开启 WAL 模式。
+
+## 实际案例：远程下载任务
+
+项目中的 `RemoteDownloadTask` 是一个完整的任务队列使用示例：
+
+```go
+// pkg/queue/remote_download_task.go
+type RemoteDownloadTask struct {
+    *DBTask
+    URL        string
+    SavePath   string
+    Downloader downloader.Downloader
+    state      RemoteDownloadTaskState
+}
+
+// 状态流转
+const (
+    StateNotStarted = "not_started" // -> 调用下载器创建任务
+    StateMonitor    = "monitor"     // -> 监控下载进度
+    StateSeeding    = "seeding"     // -> BT做种中
+    StateCompleted  = "completed"   // -> 任务完成
+)
+
+func (t *RemoteDownloadTask) Do(ctx context.Context) (Status, error) {
+    switch t.state.Status {
+    case StateNotStarted:
+        // 创建下载任务
+        handle, err := t.Downloader.CreateTask(ctx, t.URL, nil)
+        if err != nil {
+            return StatusError, err
+        }
+        t.state.Handle = handle
+        t.state.Status = StateMonitor
+        return StatusProcessing, nil
+
+    case StateMonitor:
+        // 查询下载状态
+        status, err := t.Downloader.Info(ctx, t.state.Handle)
+        if err != nil {
+            return StatusError, err
+        }
+
+        if status.IsComplete() {
+            t.state.Status = StateCompleted
+            return StatusCompleted, nil
+        }
+
+        if status.State == downloader.StatusSeeding {
+            t.state.Status = StateSeeding
+        }
+
+        // 继续监控
+        t.ResumeAfter(5 * time.Second)
+        return StatusSuspending, nil
+
+    case StateSeeding:
+        // BT做种中，继续监控
+        t.ResumeAfter(30 * time.Second)
+        return StatusSuspending, nil
+
+    case StateCompleted:
+        return StatusCompleted, nil
+    }
+
+    return StatusError, errors.New("unknown state")
+}
+
+// 状态持久化
+func (t *RemoteDownloadTask) State() string {
+    data, _ := json.Marshal(t.state)
+    return string(data)
+}
+```
+
+这个例子展示了：
+- 使用状态机管理任务生命周期
+- 使用 `ResumeAfter()` 实现轮询监控
+- 状态自动持久化到数据库
+- 服务重启后自动恢复任务

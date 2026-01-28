@@ -12,4 +12,5 @@ var Module = fx.Options(
 	fx.Provide(NewCache),
 	fx.Provide(NewCaptcha),
 	fx.Provide(NewWebSocket),
+	ExtrasModule, // 启用扩展模块（队列、定时任务、下载器）
 )

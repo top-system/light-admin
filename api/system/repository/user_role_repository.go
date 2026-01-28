@@ -77,6 +77,20 @@ func (a UserRoleRepository) GetRoleIDsByUserID(userID uint64) ([]uint64, error) 
 	return roleIDs, nil
 }
 
+// GetUserIDsByRoleID 根据角色ID获取用户ID列表
+func (a UserRoleRepository) GetUserIDsByRoleID(roleID uint64) ([]uint64, error) {
+	var userIDs []uint64
+	result := a.db.ORM.Model(&system.UserRole{}).
+		Where("role_id=?", roleID).
+		Pluck("user_id", &userIDs)
+
+	if result.Error != nil {
+		return nil, errors.Wrap(errors.DatabaseInternalError, result.Error.Error())
+	}
+
+	return userIDs, nil
+}
+
 func (a UserRoleRepository) Create(userRole *system.UserRole) error {
 	result := a.db.ORM.Model(userRole).Create(userRole)
 	if result.Error != nil {

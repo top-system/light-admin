@@ -9,7 +9,7 @@ import (
 type Dept struct {
 	ID         uint64       `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name       string       `gorm:"column:name;size:100;not null" json:"name"`
-	Code       string       `gorm:"column:code;size:100;not null;uniqueIndex:uk_code" json:"code"`
+	Code       string       `gorm:"column:code;size:100;not null;uniqueIndex:uk_dept_code" json:"code"`
 	ParentID   uint64       `gorm:"column:parent_id;default:0" json:"parentId"`
 	TreePath   string       `gorm:"column:tree_path;size:255;not null" json:"treePath"`
 	Sort       int          `gorm:"column:sort;default:0" json:"sort"`
