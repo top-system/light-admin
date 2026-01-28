@@ -229,6 +229,22 @@ const (
 )
 ```
 
+### TaskStatus 辅助方法
+
+```go
+// Progress 返回下载进度百分比 (0-100)
+func (s *TaskStatus) Progress() float64
+
+// IsComplete 检查下载是否完成
+func (s *TaskStatus) IsComplete() bool
+
+// IsError 检查下载是否出错
+func (s *TaskStatus) IsError() bool
+
+// IsActive 检查下载是否活跃（下载中或做种中）
+func (s *TaskStatus) IsActive() bool
+```
+
 ## 高级功能
 
 ### 选择性下载
@@ -283,6 +299,11 @@ func monitorProgress(ctx context.Context, client downloader.Downloader, handle *
 
             if status.IsError() {
                 fmt.Printf("\nDownload error: %s\n", status.ErrorMessage)
+                return
+            }
+
+            if !status.IsActive() {
+                fmt.Printf("\nDownload inactive, state: %s\n", status.State)
                 return
             }
         }

@@ -10,6 +10,7 @@
 - **消息广播**: 向所有在线用户或订阅者发送消息
 - **点对点通信**: 向指定用户发送私信
 - **主题订阅**: 支持订阅特定主题接收消息
+- **订阅时推送**: 订阅特定主题时自动推送初始数据（如在线人数）
 - **在线状态**: 实时获取在线用户数量和列表
 
 ## 架构对比
@@ -44,6 +45,23 @@ GET /ws
 | `/app/*` | 客户端发送消息到服务端 | `/app/sendToAll` |
 | `/topic/*` | 广播消息（发布/订阅模式） | `/topic/notice` |
 | `/user/{username}/queue/*` | 点对点消息 | `/user/zhangsan/queue/greeting` |
+
+### 广播主题常量
+
+| 常量 | 值 | 说明 |
+|------|------|------|
+| `TopicDict` | `/topic/dict` | 字典变更通知 |
+| `TopicOnlineCount` | `/topic/online-count` | 在线人数变更 |
+| `TopicPublic` | `/topic/public` | 公共系统消息 |
+| `TopicNotice` | `/topic/notice` | 通知广播 |
+
+### 用户队列常量
+
+| 常量 | 值 | 说明 |
+|------|------|------|
+| `UserQueueMessages` | `/queue/messages` | 用户消息队列（通知） |
+| `UserQueueMessage` | `/queue/message` | 用户单条消息 |
+| `UserQueueGreeting` | `/queue/greeting` | 点对点私信 |
 
 ### HTTP API（服务端主动推送）
 
@@ -103,7 +121,9 @@ const client = new Client({
     })
 
     // 订阅个人消息（点对点）
-    client.subscribe('/user/admin/queue/greeting', (message) => {
+    // 注意：需要用当前登录用户的用户名替换 {username}
+    const username = 'admin' // 从用户状态获取当前用户名
+    client.subscribe(`/user/${username}/queue/greeting`, (message) => {
       const data = JSON.parse(message.body)
       console.log('收到私信:', data)
     })
@@ -152,8 +172,10 @@ export function useWebSocket() {
   const connected = ref(false)
   const onlineCount = ref(0)
   let client: Client | null = null
+  let currentUsername: string = ''
 
-  function connect(token: string) {
+  function connect(token: string, username: string) {
+    currentUsername = username
     client = new Client({
       brokerURL: import.meta.env.VITE_WS_URL || 'ws://localhost:2222/ws',
       connectHeaders: {
@@ -182,6 +204,14 @@ export function useWebSocket() {
           // 触发字典刷新事件
           window.dispatchEvent(new CustomEvent('dict-change', { detail: data }))
         })
+
+        // 订阅个人消息（点对点）
+        if (currentUsername) {
+          client?.subscribe(`/user/${currentUsername}/queue/greeting`, (msg: IMessage) => {
+            const data = JSON.parse(msg.body)
+            ElNotification({ title: `来自 ${data.sender} 的私信`, message: data.content })
+          })
+        }
       },
 
       onDisconnect: () => {
@@ -247,7 +277,7 @@ const userStore = useUserStore()
 const { connected, onlineCount, connect, sendToAll } = useWebSocket()
 
 onMounted(() => {
-  connect(userStore.token)
+  connect(userStore.token, userStore.username)
 })
 
 function broadcastMessage() {
@@ -287,20 +317,63 @@ func NewDictService(websocket *ws.WebSocket) *DictService {
 func (s *DictService) UpdateDict(dictCode string) error {
     // ... 更新字典逻辑
 
-    // 广播字典变更通知 (对应 Java webSocketService.broadcastDictChange)
+    // 广播字典变更通知到 /topic/dict（只发给订阅者）
     s.websocket.BroadcastDictChange(dictCode)
 
     return nil
 }
 
-// 发送通知给指定用户
-func (s *DictService) NotifyUser(username, message string) {
+// 发送通知给指定用户（发送到 /user/{username}/queue/messages）
+func (s *DictService) NotifyUser(username string, message interface{}) {
     s.websocket.SendNotification(username, message)
+}
+
+// 发送点对点私信（发送到 /user/{username}/queue/greeting）
+func (s *DictService) SendPrivateMessage(sender, receiver, message string) {
+    s.websocket.SendToUser(sender, receiver, message)
+}
+
+// 广播系统消息（发送到 /topic/public）
+func (s *DictService) BroadcastSystemMessage(message string) {
+    s.websocket.BroadcastSystemMessage(message)
+}
+
+// 广播通知（发送到 /topic/notice，所有已认证用户都会收到）
+func (s *DictService) BroadcastNotice(message string) {
+    s.websocket.BroadcastNotice(message)
 }
 
 // 检查用户是否在线
 func (s *DictService) IsUserOnline(username string) bool {
     return s.websocket.IsUserOnline(username)
+}
+
+// 获取在线用户数（去重）
+func (s *DictService) GetOnlineUserCount() int {
+    return s.websocket.GetOnlineUserCount()
+}
+```
+
+### Publish vs Broadcast 的区别
+
+| 方法 | 说明 | 使用场景 |
+|------|------|------|
+| `Broker.Publish(destination, body)` | 只发送给订阅了该 destination 的用户 | 字典变更等可选订阅的消息 |
+| `Broker.Broadcast(destination, body)` | 发送给所有已认证用户（不管是否订阅） | 在线人数、系统通知等必须推送的消息 |
+
+### 订阅时推送初始数据
+
+当用户订阅 `/topic/online-count` 时，服务端会自动推送当前在线人数，确保用户登录后能立即看到正确的在线人数。
+
+```go
+// 在 websocket.go 中的实现
+broker.OnSubscribe = func(session *stomp.Session, destination string) {
+    switch destination {
+    case TopicOnlineCount:
+        // 用户订阅在线人数主题时，立即发送当前在线连接数
+        count := broker.GetTotalSessionCount()
+        broker.SendToSession(session.ID, TopicOnlineCount, count)
+    }
 }
 ```
 

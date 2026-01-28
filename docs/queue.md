@@ -544,73 +544,139 @@ CREATE INDEX idx_sys_tasks_deleted_at ON sys_tasks(deleted_at);
 // pkg/queue/remote_download_task.go
 type RemoteDownloadTask struct {
     *DBTask
-    URL        string
-    SavePath   string
-    Downloader downloader.Downloader
-    state      RemoteDownloadTaskState
+    l        Logger
+    state    *RemoteDownloadTaskState
+    d        downloader.Downloader
+    progress Progresses
 }
 
-// 状态流转
+// 任务状态
+type RemoteDownloadTaskState struct {
+    URL                string                  `json:"url"`
+    Dst                string                  `json:"dst,omitempty"`
+    Downloader         string                  `json:"downloader"`
+    Handle             *downloader.TaskHandle  `json:"handle,omitempty"`
+    Status             *downloader.TaskStatus  `json:"status,omitempty"`
+    Phase              RemoteDownloadTaskPhase `json:"phase,omitempty"`
+    GetTaskStatusTried int                     `json:"get_task_status_tried,omitempty"`
+    Options            map[string]interface{}  `json:"options,omitempty"`
+}
+
+// 阶段常量
 const (
-    StateNotStarted = "not_started" // -> 调用下载器创建任务
-    StateMonitor    = "monitor"     // -> 监控下载进度
-    StateSeeding    = "seeding"     // -> BT做种中
-    StateCompleted  = "completed"   // -> 任务完成
+    RemoteDownloadTaskPhaseNotStarted RemoteDownloadTaskPhase = ""        // 未开始
+    RemoteDownloadTaskPhaseMonitor    RemoteDownloadTaskPhase = "monitor" // 监控下载进度
+    RemoteDownloadTaskPhaseSeeding    RemoteDownloadTaskPhase = "seeding" // BT做种中
 )
 
-func (t *RemoteDownloadTask) Do(ctx context.Context) (Status, error) {
-    switch t.state.Status {
-    case StateNotStarted:
-        // 创建下载任务
-        handle, err := t.Downloader.CreateTask(ctx, t.URL, nil)
-        if err != nil {
-            return StatusError, err
-        }
-        t.state.Handle = handle
-        t.state.Status = StateMonitor
-        return StatusProcessing, nil
-
-    case StateMonitor:
-        // 查询下载状态
-        status, err := t.Downloader.Info(ctx, t.state.Handle)
-        if err != nil {
-            return StatusError, err
-        }
-
-        if status.IsComplete() {
-            t.state.Status = StateCompleted
-            return StatusCompleted, nil
-        }
-
-        if status.State == downloader.StatusSeeding {
-            t.state.Status = StateSeeding
-        }
-
-        // 继续监控
-        t.ResumeAfter(5 * time.Second)
-        return StatusSuspending, nil
-
-    case StateSeeding:
-        // BT做种中，继续监控
-        t.ResumeAfter(30 * time.Second)
-        return StatusSuspending, nil
-
-    case StateCompleted:
-        return StatusCompleted, nil
+func (m *RemoteDownloadTask) Do(ctx context.Context) (Status, error) {
+    // 从 context 获取 logger
+    if l, ok := ctx.Value(LoggerCtx{}).(Logger); ok {
+        m.l = l
     }
 
-    return StatusError, errors.New("unknown state")
+    // 反序列化状态
+    state := &RemoteDownloadTaskState{}
+    json.Unmarshal([]byte(m.State()), state)
+    m.state = state
+
+    var next Status
+    var err error
+
+    switch m.state.Phase {
+    case RemoteDownloadTaskPhaseNotStarted:
+        next, err = m.createDownloadTask(ctx)
+    case RemoteDownloadTaskPhaseMonitor, RemoteDownloadTaskPhaseSeeding:
+        next, err = m.monitor(ctx)
+    }
+
+    // 保存状态
+    newStateStr, _ := json.Marshal(m.state)
+    m.TaskModel.PrivateState = string(newStateStr)
+
+    return next, err
 }
 
-// 状态持久化
-func (t *RemoteDownloadTask) State() string {
-    data, _ := json.Marshal(t.state)
-    return string(data)
+func (m *RemoteDownloadTask) monitor(ctx context.Context) (Status, error) {
+    status, err := m.d.Info(ctx, m.state.Handle)
+    if err != nil {
+        // 错误处理和重试逻辑
+        m.ResumeAfter(10 * time.Second)
+        return StatusSuspending, nil
+    }
+
+    m.state.Status = status
+
+    switch status.State {
+    case downloader.StatusSeeding:
+        m.state.Phase = RemoteDownloadTaskPhaseSeeding
+        m.ResumeAfter(10 * time.Second)
+        return StatusSuspending, nil
+
+    case downloader.StatusCompleted:
+        return StatusCompleted, nil
+
+    case downloader.StatusDownloading:
+        m.ResumeAfter(10 * time.Second)
+        return StatusSuspending, nil
+
+    case downloader.StatusError:
+        return StatusError, fmt.Errorf("download failed: %s", status.ErrorMessage)
+    }
+
+    m.ResumeAfter(10 * time.Second)
+    return StatusSuspending, nil
 }
+```
+
+### 下载器注册表
+
+使用 `DownloaderRegistry` 管理多个下载器实例：
+
+```go
+// 创建下载器注册表
+registry := queue.NewDownloaderRegistry()
+
+// 注册下载器
+registry.Register("aria2", aria2Client)
+registry.Register("qbittorrent", qbClient)
+
+// 获取下载器
+if d, ok := registry.Get("aria2"); ok {
+    task.SetDownloader(d)
+}
+
+// 列出所有注册的下载器
+names := registry.List() // ["aria2", "qbittorrent"]
+```
+
+### 任务辅助方法
+
+`RemoteDownloadTask` 提供了一些辅助方法：
+
+```go
+// 获取下载句柄
+handle := task.GetHandle()
+
+// 获取当前下载状态
+status := task.GetDownloadStatus()
+
+// 设置要下载的文件（选择性下载）
+task.SetFilesToDownload(ctx,
+    &downloader.SetFileToDownloadArgs{Index: 0, Download: true},
+    &downloader.SetFileToDownloadArgs{Index: 1, Download: false},
+)
+
+// 取消下载
+task.CancelDownload(ctx)
+
+// 获取任务摘要
+summary := task.Summarize()
 ```
 
 这个例子展示了：
 - 使用状态机管理任务生命周期
 - 使用 `ResumeAfter()` 实现轮询监控
-- 状态自动持久化到数据库
+- 状态自动持久化到数据库（通过 `PrivateState` 字段）
 - 服务重启后自动恢复任务
+- 与下载器接口的集成
