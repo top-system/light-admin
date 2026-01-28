@@ -15,6 +15,8 @@ var Module = fx.Options(
 	fx.Provide(NewDeptRoutes),
 	fx.Provide(NewDictRoutes),
 	fx.Provide(NewLogRoute),
+	fx.Provide(NewTaskRoutes),
+	fx.Provide(NewDownloadRoutes),
 	fx.Provide(NewRoutes),
 )
 
@@ -39,6 +41,8 @@ func NewRoutes(
 	deptRoutes DeptRoutes,
 	dictRoutes DictRoutes,
 	logRoutes LogRoute,
+	taskRoutes TaskRoutes,
+	downloadRoutes DownloadRoutes,
 ) Routes {
 	return Routes{
 		pprofRoutes,
@@ -52,6 +56,8 @@ func NewRoutes(
 		deptRoutes,
 		dictRoutes,
 		logRoutes,
+		taskRoutes,
+		downloadRoutes,
 	}
 }
 
