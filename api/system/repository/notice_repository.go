@@ -10,15 +10,17 @@ import (
 
 // NoticeRepository database structure
 type NoticeRepository struct {
-	db     lib.Database
-	logger lib.Logger
+	db       lib.Database
+	logger   lib.Logger
+	dbCompat lib.DBCompat
 }
 
 // NewNoticeRepository creates a new notice repository
-func NewNoticeRepository(db lib.Database, logger lib.Logger) NoticeRepository {
+func NewNoticeRepository(db lib.Database, logger lib.Logger, dbCompat lib.DBCompat) NoticeRepository {
 	return NoticeRepository{
-		db:     db,
-		logger: logger,
+		db:       db,
+		logger:   logger,
+		dbCompat: dbCompat,
 	}
 }
 
@@ -103,9 +105,9 @@ func (a NoticeRepository) UpdateStatus(id uint64, status int, publisherId uint64
 		"publisher_id":   publisherId,
 	}
 	if status == 1 {
-		updates["publish_time"] = gorm.Expr("NOW()")
+		updates["publish_time"] = a.dbCompat.Now()
 	} else if status == -1 {
-		updates["revoke_time"] = gorm.Expr("NOW()")
+		updates["revoke_time"] = a.dbCompat.Now()
 	}
 
 	result := a.db.ORM.Model(&system.Notice{}).Where("id=?", id).Updates(updates)

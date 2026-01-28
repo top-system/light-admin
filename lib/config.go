@@ -3,7 +3,6 @@ package lib
 import (
 	"fmt"
 
-	"github.com/top-system/light-admin/errors"
 	"github.com/top-system/light-admin/pkg/file"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
@@ -27,7 +26,7 @@ var defaultConfig = Config{
 	Auth:       &AuthConfig{},
 	Captcha:    &CaptchaConfig{Enable: true},
 	Casbin:     &CasbinConfig{Enable: false},
-	Redis:      &RedisConfig{Host: "127.0.0.1", Port: 6379},
+	Cache:      &CacheConfig{Type: "memory"},
 	Database: &DatabaseConfig{
 		Parameters:   "charset=utf8mb4&parseTime=True&loc=Local&allowNativePasswords=true&timeout=5s",
 		MaxLifetime:  7200,
@@ -42,11 +41,11 @@ func NewConfig() Config {
 
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
-		panic(errors.Wrap(err, "failed to read config"))
+		panic(fmt.Sprintf("Failed to read configuration file: %s\nError: %v\nPlease ensure the config file exists and is valid YAML format.", configPath, err))
 	}
 
 	if err := viper.Unmarshal(&config); err != nil {
-		panic(errors.Wrap(err, "failed to marshal config"))
+		panic(fmt.Sprintf("Failed to parse configuration file: %s\nError: %v\nPlease check your config file syntax.", configPath, err))
 	}
 
 	config.Casbin.Model = casbinModelPath
@@ -55,7 +54,7 @@ func NewConfig() Config {
 
 func SetConfigPath(path string) {
 	if !file.IsFile(path) {
-		panic("config filepath does not exist")
+		panic(fmt.Sprintf("Configuration file not found: %s\nPlease create a config file or specify a valid path using the -c flag.\nExample: ./app runserver -c /path/to/config.yaml", path))
 	}
 
 	configPath = path
@@ -63,7 +62,7 @@ func SetConfigPath(path string) {
 
 func SetConfigCasbinModelPath(path string) {
 	if !file.IsFile(path) {
-		panic("casbin model filepath does not exist")
+		panic(fmt.Sprintf("Casbin model file not found: %s\nPlease create the casbin model file or specify a valid path using the -m flag.\nExample: ./app runserver -m /path/to/casbin_model.conf", path))
 	}
 
 	casbinModelPath = path
@@ -78,7 +77,7 @@ type Config struct {
 	Auth       *AuthConfig       `mapstructure:"Auth"`
 	Captcha    *CaptchaConfig    `mapstructure:"Captcha"`
 	Casbin     *CasbinConfig     `mapstructure:"Casbin"`
-	Redis      *RedisConfig      `mapstructure:"Redis"`
+	Cache      *CacheConfig      `mapstructure:"Cache"`
 	Database   *DatabaseConfig   `mapstructure:"Database"`
 	OSS        *OSSConfig        `mapstructure:"OSS"`
 
@@ -132,7 +131,7 @@ type CasbinConfig struct {
 }
 
 type DatabaseConfig struct {
-	Engine      string `mapstructure:"Engine"`
+	Engine      string `mapstructure:"Engine"` // mysql, sqlite
 	Name        string `mapstructure:"Name"`
 	Host        string `mapstructure:"Host"`
 	Port        int    `mapstructure:"Port"`
@@ -146,11 +145,41 @@ type DatabaseConfig struct {
 	MaxIdleConns int `mapstructure:"MaxIdleConns"`
 }
 
-type RedisConfig struct {
-	Host      string `mapstructure:"Host"`
-	Port      int    `mapstructure:"Port"`
-	Password  string `mapstructure:"Password"`
+// IsSQLite returns true if the database engine is SQLite
+func (a *DatabaseConfig) IsSQLite() bool {
+	return a.Engine == "sqlite"
+}
+
+// IsMySQL returns true if the database engine is MySQL
+func (a *DatabaseConfig) IsMySQL() bool {
+	return a.Engine == "" || a.Engine == "mysql"
+}
+
+// CacheConfig cache configuration
+// Type: memory, redis
+type CacheConfig struct {
+	Type      string `mapstructure:"Type"` // memory or redis
 	KeyPrefix string `mapstructure:"KeyPrefix"`
+
+	// Redis specific settings (only used when Type is "redis")
+	Host     string `mapstructure:"Host"`
+	Port     int    `mapstructure:"Port"`
+	Password string `mapstructure:"Password"`
+}
+
+// IsRedis returns true if cache type is Redis
+func (c *CacheConfig) IsRedis() bool {
+	return c.Type == "redis"
+}
+
+// IsMemory returns true if cache type is Memory (default)
+func (c *CacheConfig) IsMemory() bool {
+	return c.Type == "" || c.Type == "memory"
+}
+
+// Addr returns Redis address
+func (c *CacheConfig) Addr() string {
+	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
 func (a *DatabaseConfig) DSN() string {
@@ -162,10 +191,6 @@ func (a *HttpConfig) ListenAddr() string {
 		return "0.0.0.0:5100"
 	}
 
-	return fmt.Sprintf("%s:%d", a.Host, a.Port)
-}
-
-func (a *RedisConfig) Addr() string {
 	return fmt.Sprintf("%s:%d", a.Host, a.Port)
 }
 

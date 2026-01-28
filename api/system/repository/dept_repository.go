@@ -12,15 +12,17 @@ import (
 
 // DeptRepository database structure
 type DeptRepository struct {
-	db     lib.Database
-	logger lib.Logger
+	db       lib.Database
+	logger   lib.Logger
+	dbCompat lib.DBCompat
 }
 
 // NewDeptRepository creates a new dept repository
-func NewDeptRepository(db lib.Database, logger lib.Logger) DeptRepository {
+func NewDeptRepository(db lib.Database, logger lib.Logger, dbCompat lib.DBCompat) DeptRepository {
 	return DeptRepository{
-		db:     db,
-		logger: logger,
+		db:       db,
+		logger:   logger,
+		dbCompat: dbCompat,
 	}
 }
 
@@ -126,8 +128,9 @@ func (a DeptRepository) Delete(id uint64, deletedBy uint64) error {
 // DeleteByTreePath 根据tree_path删除部门及子部门
 func (a DeptRepository) DeleteByTreePath(deptId uint64, deletedBy uint64) error {
 	// 删除部门本身和所有子部门（tree_path包含该部门ID的）
+	treePathExpr := a.dbCompat.TreePathLike("tree_path")
 	result := a.db.ORM.Model(&system.Dept{}).
-		Where("id = ? OR CONCAT(',', tree_path, ',') LIKE ?", deptId, "%,"+strconv.FormatUint(deptId, 10)+",%").
+		Where("id = ? OR "+treePathExpr+" LIKE ?", deptId, "%,"+strconv.FormatUint(deptId, 10)+",%").
 		Updates(map[string]interface{}{
 			"is_deleted": 1,
 			"update_by":  deletedBy,

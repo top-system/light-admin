@@ -24,10 +24,10 @@ type options struct {
 
 type AuthService struct {
 	opts  *options
-	redis lib.Redis
+	cache lib.Cache
 }
 
-func NewAuthService(redis lib.Redis, config lib.Config) AuthService {
+func NewAuthService(cache lib.Cache, config lib.Config) AuthService {
 	issuer := config.Name
 	signingKey := fmt.Sprintf("Jwt:%s", issuer)
 
@@ -45,7 +45,7 @@ func NewAuthService(redis lib.Redis, config lib.Config) AuthService {
 		},
 	}
 
-	return AuthService{redis: redis, opts: opts}
+	return AuthService{cache: cache, opts: opts}
 }
 
 func wrapperAuthKey(key string) string {
@@ -68,7 +68,7 @@ func (a AuthService) GenerateToken(user *system.User) (*dto.LoginResponse, error
 	token := jwt.NewWithClaims(a.opts.signingMethod, claims)
 	expired := expiresAt.Sub(time.Now())
 
-	err := a.redis.Set(wrapperAuthKey(claims.Username), 1, expired)
+	err := a.cache.Set(wrapperAuthKey(claims.Username), 1, expired)
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +110,6 @@ func (a AuthService) ParseToken(tokenString string) (*dto.JwtClaims, error) {
 }
 
 func (a AuthService) DestroyToken(username string) error {
-	_, err := a.redis.Delete(wrapperAuthKey(username))
+	_, err := a.cache.Delete(wrapperAuthKey(username))
 	return err
 }

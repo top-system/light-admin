@@ -12,19 +12,19 @@ import (
 // ConfigService service layer
 type ConfigService struct {
 	logger           lib.Logger
-	redis            lib.Redis
+	cache            lib.Cache
 	configRepository repository.ConfigRepository
 }
 
 // NewConfigService creates a new config service
 func NewConfigService(
 	logger lib.Logger,
-	redis lib.Redis,
+	cache lib.Cache,
 	configRepository repository.ConfigRepository,
 ) ConfigService {
 	return ConfigService{
 		logger:           logger,
-		redis:            redis,
+		cache:            cache,
 		configRepository: configRepository,
 	}
 }
@@ -133,7 +133,7 @@ func (a ConfigService) Delete(id uint64, deletedBy uint64) error {
 func (a ConfigService) RefreshCache() error {
 	// 删除旧缓存
 	cacheKey := "sys:config"
-	_, err := a.redis.Delete(cacheKey)
+	_, err := a.cache.Delete(cacheKey)
 	if err != nil {
 		a.logger.Zap.Warnf("Failed to delete config cache: %v", err)
 	}
@@ -151,7 +151,7 @@ func (a ConfigService) RefreshCache() error {
 	}
 
 	if len(configMap) > 0 {
-		if err := a.redis.HMSet(cacheKey, configMap); err != nil {
+		if err := a.cache.HMSet(cacheKey, configMap); err != nil {
 			a.logger.Zap.Warnf("Failed to set config cache: %v", err)
 		}
 	}
@@ -163,7 +163,7 @@ func (a ConfigService) RefreshCache() error {
 func (a ConfigService) GetSystemConfig(key string) (string, error) {
 	cacheKey := "sys:config"
 	var value string
-	err := a.redis.HGet(cacheKey, key, &value)
+	err := a.cache.HGet(cacheKey, key, &value)
 	if err != nil {
 		// 如果缓存中没有，从数据库获取
 		config, dbErr := a.configRepository.GetByKey(key)

@@ -16,11 +16,11 @@ type Captcha struct {
 
 type CaptchaStore struct {
 	key    string
-	redis  *Redis
+	cache  Cache
 	logger *zap.SugaredLogger
 }
 
-func NewCaptcha(redis Redis, logger Logger) Captcha {
+func NewCaptcha(cache Cache, logger Logger) Captcha {
 	ds := base64Captcha.NewDriverString(
 		46,
 		140,
@@ -35,7 +35,7 @@ func NewCaptcha(redis Redis, logger Logger) Captcha {
 
 	driver := ds.ConvertFonts()
 	store := &CaptchaStore{
-		redis:  &redis,
+		cache:  cache,
 		key:    constants.CaptchaKeyPrefix,
 		logger: logger.Zap.With(zap.String("module", "captcha")),
 	}
@@ -48,9 +48,9 @@ func (a *CaptchaStore) getKey(v string) string {
 }
 
 func (a *CaptchaStore) Set(id string, value string) error {
-	err := a.redis.Set(a.getKey(id), value, time.Second*constants.CaptchaExpireTimes)
+	err := a.cache.Set(a.getKey(id), value, time.Second*constants.CaptchaExpireTimes)
 	if err != nil {
-		a.logger.Errorf("captcha - error writing redis: %v", err)
+		a.logger.Errorf("captcha - error writing cache: %v", err)
 	}
 	return err
 }
@@ -61,16 +61,16 @@ func (a *CaptchaStore) Get(id string, clear bool) string {
 		val string
 	)
 
-	err := a.redis.Get(key, &val)
+	err := a.cache.Get(key, &val)
 	if err != nil {
-		a.logger.Errorf("captcha - error reading redis: %v", err)
+		a.logger.Errorf("captcha - error reading cache: %v", err)
 		return ""
 	}
 
 	if !clear {
-		_, err := a.redis.Delete(key)
+		_, err := a.cache.Delete(key)
 		if err != nil {
-			a.logger.Errorf("captcha - error deleting item from redis: %v", err)
+			a.logger.Errorf("captcha - error deleting item from cache: %v", err)
 		}
 	}
 

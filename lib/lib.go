@@ -8,7 +8,8 @@ var Module = fx.Options(
 	fx.Provide(NewConfig),
 	fx.Provide(NewLogger),
 	fx.Provide(NewDatabase),
-	fx.Provide(NewRedis),
+	fx.Provide(NewDBCompat),
+	fx.Provide(NewCache),
 	fx.Provide(NewCaptcha),
 	fx.Provide(NewWebSocket),
 )

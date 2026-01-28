@@ -40,12 +40,24 @@ Casbin:
     - /api/v1/auth/captcha
     - /api/v1/auth/login
 
-Redis:
-  Host: 172.16.217.2
-  Port: 6379
-  Password: redispass
-  KeyPrefix: r
+# Cache configuration
+# Type: memory or redis
+# Memory cache is suitable for single-instance deployment
+# Redis is recommended for multi-instance deployment
+Cache:
+  Type: memory
+  KeyPrefix: app
 
+# Redis cache configuration example:
+# Cache:
+#   Type: redis
+#   Host: 127.0.0.1
+#   Port: 6379
+#   Password: your_password
+#   KeyPrefix: app
+
+# Database configuration
+# Engine: mysql or sqlite
 Database:
   Engine: mysql
   Name: clean
@@ -58,6 +70,12 @@ Database:
   MaxLifetime: 7200
   MaxOpenConns: 150
   MaxIdleConns: 50
+
+# SQLite configuration example (uncomment to use SQLite instead of MySQL):
+# Database:
+#   Engine: sqlite
+#   Name: ./data/app.db    # SQLite database file path
+#   TablePrefix: t
 
 # 对象存储配置
 # Type: local, minio, aliyun

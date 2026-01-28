@@ -10,15 +10,17 @@ import (
 
 // UserNoticeRepository database structure
 type UserNoticeRepository struct {
-	db     lib.Database
-	logger lib.Logger
+	db       lib.Database
+	logger   lib.Logger
+	dbCompat lib.DBCompat
 }
 
 // NewUserNoticeRepository creates a new user notice repository
-func NewUserNoticeRepository(db lib.Database, logger lib.Logger) UserNoticeRepository {
+func NewUserNoticeRepository(db lib.Database, logger lib.Logger, dbCompat lib.DBCompat) UserNoticeRepository {
 	return UserNoticeRepository{
-		db:     db,
-		logger: logger,
+		db:       db,
+		logger:   logger,
+		dbCompat: dbCompat,
 	}
 }
 
@@ -94,7 +96,7 @@ func (a UserNoticeRepository) MarkAsRead(noticeID, userID uint64) error {
 		Where("notice_id = ? AND user_id = ? AND is_read = ?", noticeID, userID, 0).
 		Updates(map[string]interface{}{
 			"is_read":   1,
-			"read_time": gorm.Expr("NOW()"),
+			"read_time": a.dbCompat.Now(),
 		})
 	if result.Error != nil {
 		return errors.Wrap(errors.DatabaseInternalError, result.Error.Error())
@@ -108,7 +110,7 @@ func (a UserNoticeRepository) MarkAllAsRead(userID uint64) error {
 		Where("user_id = ? AND is_read = ?", userID, 0).
 		Updates(map[string]interface{}{
 			"is_read":   1,
-			"read_time": gorm.Expr("NOW()"),
+			"read_time": a.dbCompat.Now(),
 		})
 	if result.Error != nil {
 		return errors.Wrap(errors.DatabaseInternalError, result.Error.Error())
