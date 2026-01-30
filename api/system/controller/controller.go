@@ -14,6 +14,4 @@ var Module = fx.Options(
 	fx.Provide(NewDeptController),
 	fx.Provide(NewDictController),
 	fx.Provide(NewLogController),
-	fx.Provide(NewTaskController),
-	fx.Provide(NewDownloadController),
 )

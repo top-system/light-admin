@@ -82,9 +82,7 @@ type Config struct {
 	OSS        *OSSConfig        `mapstructure:"OSS"`
 
 	// ====== 扩展功能配置 (可选) ======
-	Queue      *QueueConfig      `mapstructure:"Queue"`
-	Crontab    *CrontabConfig    `mapstructure:"Crontab"`
-	Downloader *DownloaderConfig `mapstructure:"Downloader"`
+	Crontab *CrontabConfig `mapstructure:"Crontab"`
 }
 
 type CaptchaConfig struct {
@@ -228,40 +226,7 @@ type AliyunOSSConfig struct {
 // 扩展功能配置 (可选)
 // ============================================================================
 
-// QueueConfig 任务队列配置
-type QueueConfig struct {
-	Enable    bool   `mapstructure:"Enable"`    // 是否启用
-	Name      string `mapstructure:"Name"`      // 队列名称
-	WorkerNum int    `mapstructure:"WorkerNum"` // 工作线程数
-	MaxRetry  int    `mapstructure:"MaxRetry"`  // 最大重试次数
-}
-
 // CrontabConfig 定时任务配置
 type CrontabConfig struct {
 	Enable bool `mapstructure:"Enable"` // 是否启用
-}
-
-// DownloaderConfig 下载器配置
-type DownloaderConfig struct {
-	Enable      bool               `mapstructure:"Enable"` // 是否启用
-	Type        string             `mapstructure:"Type"`   // 类型: aria2, qbittorrent
-	Aria2       *Aria2Config       `mapstructure:"Aria2"`
-	QBittorrent *QBittorrentConfig `mapstructure:"QBittorrent"`
-}
-
-// Aria2Config aria2 配置
-type Aria2Config struct {
-	Server   string                 `mapstructure:"Server"`   // RPC 服务器地址
-	Token    string                 `mapstructure:"Token"`    // RPC 密钥
-	TempPath string                 `mapstructure:"TempPath"` // 临时下载路径
-	Options  map[string]interface{} `mapstructure:"Options"`  // 额外选项
-}
-
-// QBittorrentConfig qBittorrent 配置
-type QBittorrentConfig struct {
-	Server   string                 `mapstructure:"Server"`   // Web UI 地址
-	User     string                 `mapstructure:"User"`     // 用户名
-	Password string                 `mapstructure:"Password"` // 密码
-	TempPath string                 `mapstructure:"TempPath"` // 临时下载路径
-	Options  map[string]interface{} `mapstructure:"Options"`  // 额外选项
 }

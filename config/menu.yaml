@@ -259,50 +259,6 @@
           perm: sys:log:query
           sort: 1
 
-    - name: 任务队列
-      type: 1
-      route_name: Queue
-      route_path: queue
-      component: system/queue/index
-      icon: timer
-      sort: 10
-      visible: 1
-      children:
-        - name: 任务查询
-          type: 4
-          perm: sys:task:query
-          sort: 1
-        - name: 任务删除
-          type: 4
-          perm: sys:task:delete
-          sort: 2
-
-    - name: 下载管理
-      type: 1
-      route_name: Downloader
-      route_path: downloader
-      component: system/downloader/index
-      icon: download
-      sort: 11
-      visible: 1
-      children:
-        - name: 下载查询
-          type: 4
-          perm: sys:download:query
-          sort: 1
-        - name: 新增下载
-          type: 4
-          perm: sys:download:add
-          sort: 2
-        - name: 编辑下载
-          type: 4
-          perm: sys:download:edit
-          sort: 3
-        - name: 删除下载
-          type: 4
-          perm: sys:download:delete
-          sort: 4
-
 - name: 组件封装
   type: 2
   route_name: Component

@@ -3,7 +3,6 @@ package migrate
 import (
 	"github.com/top-system/light-admin/lib"
 	"github.com/top-system/light-admin/models/system"
-	"github.com/top-system/light-admin/pkg/queue"
 	"github.com/spf13/cobra"
 )
 
@@ -41,10 +40,6 @@ var StartCmd = &cobra.Command{
 			&system.Dict{},
 			&system.DictItem{},
 			&system.Log{},
-
-			// 扩展功能模型 (可选)
-			&queue.TaskModel{},    // 任务队列
-			&system.DownloadTask{}, // 下载任务
 		); err != nil {
 			logger.Zap.Fatalf("Error to migrate database: %v", err)
 		}

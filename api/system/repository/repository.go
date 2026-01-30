@@ -16,6 +16,4 @@ var Module = fx.Options(
 	fx.Provide(NewDictRepository),
 	fx.Provide(NewDictItemRepository),
 	fx.Provide(NewLogRepository),
-	fx.Provide(NewTaskRepository),
-	fx.Provide(NewDownloadRepository),
 )

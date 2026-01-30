@@ -43,8 +43,6 @@
 ### Extended Features
 - 📤 **File Upload** - Local storage, MinIO, Aliyun OSS support
 - ⏰ **Scheduled Tasks** - Flexible cron job scheduling
-- 📥 **Task Queue** - Async task processing with retry, persistence, and state recovery
-- ⬇️ **Download Manager** - aria2/qBittorrent integration, deeply integrated with queue system
 - 🔌 **WebSocket** - STOMP protocol-based real-time communication with broadcast and P2P messaging
 
 ### Technical Features
@@ -79,8 +77,6 @@ light-admin/
 │   └── system/             # System module models
 ├── pkg/                    # Utility packages
 │   ├── crontab/            # Scheduled tasks
-│   ├── downloader/         # Downloader (aria2/qBittorrent)
-│   ├── queue/              # Task queue
 │   ├── websocket/          # WebSocket (STOMP protocol)
 │   └── ...                 # Other utilities
 └── tests/                  # Test files
@@ -140,9 +136,7 @@ docker run -d -p 2222:2222 \
 | Document | Description |
 |----------|-------------|
 | [API Docs](docs/swagger.yaml) | Swagger API documentation |
-| [Task Queue](docs/queue.md) | Async task queue guide |
 | [Crontab](docs/crontab.md) | Scheduled tasks guide |
-| [Downloader](docs/downloader.md) | aria2/qBittorrent integration guide |
 | [WebSocket](docs/websocket.md) | Real-time communication guide |
 
 ---
@@ -194,21 +188,9 @@ Cache:
 ### Extended Features Configuration
 
 ```yaml
-# Task Queue
-Queue:
+# Scheduled Tasks
+Crontab:
   Enable: true
-  Name: "default"
-  WorkerNum: 2
-  MaxRetry: 3
-
-# Downloader
-Downloader:
-  Enable: true
-  Type: aria2  # aria2 or qbittorrent
-  Aria2:
-    Server: "http://localhost:6800/jsonrpc"
-    Token: ""
-    TempPath: "./downloads"
 ```
 
 ---
@@ -244,9 +226,7 @@ go test ./...
 - [x] Department & organization structure
 - [x] System configuration & dictionary
 - [x] File upload (Local/OSS)
-- [x] Async task queue
 - [x] Scheduled task scheduling
-- [x] Downloader integration (deeply integrated with queue)
 - [x] WebSocket real-time communication
 - [x] Permission caching optimization
 - [x] SQLite support

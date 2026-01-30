@@ -16,6 +16,4 @@ var Module = fx.Options(
 	fx.Provide(NewDictService),
 	fx.Provide(NewDictItemService),
 	fx.Provide(NewLogService),
-	fx.Provide(NewTaskService),
-	fx.Provide(NewDownloadService),
 )
