@@ -149,10 +149,12 @@ func (m LogMiddleware) Handle() echo.MiddlewareFunc {
 
 			startTime := time.Now()
 
-			// 读取请求体
+			// 读取请求体（跳过文件上传，避免将整个文件读入内存）
 			var requestBody []byte
-			if c.Request().Body != nil {
-				requestBody, _ = io.ReadAll(c.Request().Body)
+			contentType := c.Request().Header.Get("Content-Type")
+			isMultipart := strings.HasPrefix(contentType, "multipart/form-data")
+			if c.Request().Body != nil && !isMultipart {
+				requestBody, _ = io.ReadAll(io.LimitReader(c.Request().Body, 4096))
 				c.Request().Body = io.NopCloser(bytes.NewBuffer(requestBody))
 			}
 
@@ -193,12 +195,18 @@ func (m LogMiddleware) Handle() echo.MiddlewareFunc {
 				content = content + module
 			}
 
+			// 截断过长的响应内容
+			responseContent := resBody.String()
+			if len(responseContent) > 4096 {
+				responseContent = responseContent[:4096]
+			}
+
 			// 创建日志记录
 			log := &system.Log{
 				Module:          module,
 				RequestMethod:   method,
 				RequestParams:   string(requestBody),
-				ResponseContent: resBody.String(),
+				ResponseContent: responseContent,
 				Content:         content,
 				RequestURI:      path,
 				Method:          c.Path(),

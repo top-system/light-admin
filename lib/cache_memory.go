@@ -31,11 +31,12 @@ type hashItem struct {
 
 // MemoryCache implements Cache interface using in-memory storage
 type MemoryCache struct {
-	items      sync.Map
-	hashItems  sync.Map
-	prefix     string
-	logger     Logger
-	stopCh     chan struct{}
+	items     sync.Map
+	hashItems sync.Map
+	hashMu    sync.Mutex // protects concurrent map read/write inside hashItems
+	prefix    string
+	logger    Logger
+	stopCh    chan struct{}
 }
 
 // NewMemoryCache creates a new memory cache instance
@@ -192,14 +193,21 @@ func (m *MemoryCache) HSet(key, field string, value interface{}) error {
 
 	wKey := m.wrapperKey(key)
 
-	// Load or create hash item
-	v, _ := m.hashItems.LoadOrStore(wKey, hashItem{
-		Fields: make(map[string][]byte),
-	})
+	m.hashMu.Lock()
+	defer m.hashMu.Unlock()
 
-	item := v.(hashItem)
-	if item.Fields == nil {
-		item.Fields = make(map[string][]byte)
+	v, ok := m.hashItems.Load(wKey)
+	var item hashItem
+	if ok {
+		old := v.(hashItem)
+		// Deep copy Fields to avoid sharing the underlying map
+		newFields := make(map[string][]byte, len(old.Fields)+1)
+		for k, val := range old.Fields {
+			newFields[k] = val
+		}
+		item = hashItem{Fields: newFields, Expiration: old.Expiration}
+	} else {
+		item = hashItem{Fields: make(map[string][]byte)}
 	}
 	item.Fields[field] = data
 
@@ -211,18 +219,23 @@ func (m *MemoryCache) HSet(key, field string, value interface{}) error {
 func (m *MemoryCache) HGet(key, field string, value interface{}) error {
 	wKey := m.wrapperKey(key)
 
+	m.hashMu.Lock()
 	v, ok := m.hashItems.Load(wKey)
 	if !ok {
+		m.hashMu.Unlock()
 		return errors.RedisKeyNoExist
 	}
 
 	item := v.(hashItem)
 	if item.Expiration > 0 && time.Now().UnixNano() > item.Expiration {
 		m.hashItems.Delete(wKey)
+		m.hashMu.Unlock()
 		return errors.RedisKeyNoExist
 	}
 
 	data, ok := item.Fields[field]
+	m.hashMu.Unlock()
+
 	if !ok {
 		return errors.RedisKeyNoExist
 	}
@@ -246,21 +259,34 @@ func (m *MemoryCache) HGet(key, field string, value interface{}) error {
 func (m *MemoryCache) HMSet(key string, values map[string]interface{}) error {
 	wKey := m.wrapperKey(key)
 
-	// Load or create hash item
-	v, _ := m.hashItems.LoadOrStore(wKey, hashItem{
-		Fields: make(map[string][]byte),
-	})
-
-	item := v.(hashItem)
-	if item.Fields == nil {
-		item.Fields = make(map[string][]byte)
-	}
-
+	// Pre-marshal all values before taking the lock
+	marshalled := make(map[string][]byte, len(values))
 	for field, value := range values {
 		data, err := json.Marshal(value)
 		if err != nil {
 			return err
 		}
+		marshalled[field] = data
+	}
+
+	m.hashMu.Lock()
+	defer m.hashMu.Unlock()
+
+	v, ok := m.hashItems.Load(wKey)
+	var item hashItem
+	if ok {
+		old := v.(hashItem)
+		// Deep copy Fields to avoid sharing the underlying map
+		newFields := make(map[string][]byte, len(old.Fields)+len(marshalled))
+		for k, val := range old.Fields {
+			newFields[k] = val
+		}
+		item = hashItem{Fields: newFields, Expiration: old.Expiration}
+	} else {
+		item = hashItem{Fields: make(map[string][]byte, len(marshalled))}
+	}
+
+	for field, data := range marshalled {
 		item.Fields[field] = data
 	}
 
@@ -272,20 +298,29 @@ func (m *MemoryCache) HMSet(key string, values map[string]interface{}) error {
 func (m *MemoryCache) HDel(key string, fields ...string) error {
 	wKey := m.wrapperKey(key)
 
+	m.hashMu.Lock()
+	defer m.hashMu.Unlock()
+
 	v, ok := m.hashItems.Load(wKey)
 	if !ok {
 		return nil
 	}
 
-	item := v.(hashItem)
-	for _, field := range fields {
-		delete(item.Fields, field)
+	old := v.(hashItem)
+	// Deep copy Fields to avoid sharing the underlying map
+	newFields := make(map[string][]byte, len(old.Fields))
+	for k, val := range old.Fields {
+		newFields[k] = val
 	}
 
-	if len(item.Fields) == 0 {
+	for _, field := range fields {
+		delete(newFields, field)
+	}
+
+	if len(newFields) == 0 {
 		m.hashItems.Delete(wKey)
 	} else {
-		m.hashItems.Store(wKey, item)
+		m.hashItems.Store(wKey, hashItem{Fields: newFields, Expiration: old.Expiration})
 	}
 
 	return nil
