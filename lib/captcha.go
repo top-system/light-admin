@@ -67,7 +67,7 @@ func (a *CaptchaStore) Get(id string, clear bool) string {
 		return ""
 	}
 
-	if !clear {
+	if clear {
 		_, err := a.cache.Delete(key)
 		if err != nil {
 			a.logger.Errorf("captcha - error deleting item from cache: %v", err)

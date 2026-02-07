@@ -76,6 +76,9 @@ Database:
 #   Engine: sqlite
 #   Name: ./data/app.db    # SQLite database file path
 #   TablePrefix: t
+#   MaxLifetime: 7200
+#   MaxOpenConns: 4        # SQLite with WAL mode supports concurrent reads
+#   MaxIdleConns: 2
 
 # 对象存储配置
 # Type: local, minio, aliyun
