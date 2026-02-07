@@ -20,8 +20,6 @@ func NewCorsMiddleware(handler lib.HttpHandler, logger lib.Logger) CorsMiddlewar
 }
 
 func (a CorsMiddleware) Setup() {
-	a.logger.Zap.Info("Setting up cors middleware")
-
 	a.handler.Engine.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOriginFunc: func(origin string) (bool, error) {
 			// 允许所有来源（开发环境）

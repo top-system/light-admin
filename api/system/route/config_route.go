@@ -30,7 +30,6 @@ func NewConfigRoutes(
 
 // Setup config routes
 func (a ConfigRoutes) Setup() {
-	a.logger.Zap.Info("Setting up config routes")
 	api := a.handler.RouterV1.Group("/configs")
 	{
 		api.GET("", a.configController.Query, a.permMiddleware.RequirePerm("sys:config:query"))

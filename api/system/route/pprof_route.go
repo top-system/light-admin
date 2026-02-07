@@ -27,8 +27,6 @@ func NewPprofRoutes(
 
 // Setup pprof routes
 func (a PprofRoutes) Setup() {
-	a.logger.Zap.Info("Setting up pprof routes")
-
 	r := a.handler.Engine.Group("/pprof")
 	{
 		r.GET("/", handler(pprof.Index))

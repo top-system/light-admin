@@ -31,8 +31,6 @@ func NewLogRoute(
 
 // Setup log routes
 func (a LogRoute) Setup() {
-	a.logger.Zap.Info("Setting up log routes")
-
 	api := a.handler.RouterV1.Group("/logs")
 	{
 		api.GET("", a.logController.Query, a.permMiddleware.RequirePerm("sys:log:query"))

@@ -7,6 +7,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -15,8 +16,9 @@ import (
 type DatabaseEngine string
 
 const (
-	DatabaseEngineMySQL  DatabaseEngine = "mysql"
-	DatabaseEngineSQLite DatabaseEngine = "sqlite"
+	DatabaseEngineMySQL    DatabaseEngine = "mysql"
+	DatabaseEngineSQLite   DatabaseEngine = "sqlite"
+	DatabaseEnginePostgres DatabaseEngine = "postgres"
 )
 
 // CurrentDatabaseEngine holds the current database engine type
@@ -44,10 +46,14 @@ func NewDatabase(config Config, logger Logger) Database {
 		QueryFields: true,
 	}
 
-	if config.Database.IsSQLite() {
+	switch {
+	case config.Database.IsSQLite():
 		db, err = openSQLite(config, gormConfig, logger)
 		CurrentDatabaseEngine = DatabaseEngineSQLite
-	} else {
+	case config.Database.IsPostgreSQL():
+		db, err = openPostgreSQL(config, gormConfig, logger)
+		CurrentDatabaseEngine = DatabaseEnginePostgres
+	default:
 		db, err = openMySQL(config, gormConfig, logger)
 		CurrentDatabaseEngine = DatabaseEngineMySQL
 	}
@@ -125,6 +131,16 @@ func openSQLite(config Config, gormConfig *gorm.Config, logger Logger) (*gorm.DB
 	return db, nil
 }
 
+// openPostgreSQL opens a PostgreSQL database connection
+func openPostgreSQL(config Config, gormConfig *gorm.Config, logger Logger) (*gorm.DB, error) {
+	db, err := gorm.Open(postgres.Open(config.Database.DSN()), gormConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 // IsSQLite returns true if current database is SQLite
 func IsSQLite() bool {
 	return CurrentDatabaseEngine == DatabaseEngineSQLite
@@ -133,4 +149,9 @@ func IsSQLite() bool {
 // IsMySQL returns true if current database is MySQL
 func IsMySQL() bool {
 	return CurrentDatabaseEngine == DatabaseEngineMySQL
+}
+
+// IsPostgreSQL returns true if current database is PostgreSQL
+func IsPostgreSQL() bool {
+	return CurrentDatabaseEngine == DatabaseEnginePostgres
 }

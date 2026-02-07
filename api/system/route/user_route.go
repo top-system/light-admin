@@ -30,7 +30,6 @@ func NewUserRoutes(
 
 // Setup user routes
 func (a UserRoutes) Setup() {
-	a.logger.Zap.Info("Setting up user routes")
 	api := a.handler.RouterV1.Group("/users")
 	{
 		api.GET("/me", a.userController.Me)                  // 获取当前用户信息，无需权限

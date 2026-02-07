@@ -10,7 +10,7 @@ type Log struct {
 	Module          string       `gorm:"column:module;size:50;not null" json:"module"`
 	RequestMethod   string       `gorm:"column:request_method;size:64;not null" json:"requestMethod"`
 	RequestParams   string       `gorm:"column:request_params;type:text" json:"requestParams"`
-	ResponseContent string       `gorm:"column:response_content;type:mediumtext" json:"responseContent"`
+	ResponseContent string       `gorm:"column:response_content;type:text" json:"responseContent"`
 	Content         string       `gorm:"column:content;size:255;not null" json:"content"`
 	RequestURI      string       `gorm:"column:request_uri;size:255" json:"requestUri"`
 	Method          string       `gorm:"column:method;size:255" json:"method"`

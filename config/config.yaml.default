@@ -57,7 +57,7 @@ Cache:
 #   KeyPrefix: app
 
 # Database configuration
-# Engine: mysql or sqlite
+# Engine: mysql, sqlite, or postgres
 Database:
   Engine: mysql
   Name: clean
@@ -79,6 +79,19 @@ Database:
 #   MaxLifetime: 7200
 #   MaxOpenConns: 4        # SQLite with WAL mode supports concurrent reads
 #   MaxIdleConns: 2
+
+# PostgreSQL configuration example (uncomment to use PostgreSQL instead of MySQL):
+# Database:
+#   Engine: postgres
+#   Name: clean
+#   Host: 127.0.0.1
+#   Port: 5432
+#   Username: postgres
+#   Password: sqlpass
+#   TablePrefix: t
+#   MaxLifetime: 7200
+#   MaxOpenConns: 150
+#   MaxIdleConns: 50
 
 # 对象存储配置
 # Type: local, minio, aliyun

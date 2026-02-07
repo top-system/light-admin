@@ -29,8 +29,6 @@ func NewPublicRoutes(
 
 // Setup public routes
 func (a PublicRoutes) Setup() {
-	a.logger.Zap.Info("Setting up public routes")
-
 	// /api/v1/auth 路由组
 	auth := a.handler.RouterV1.Group("/auth")
 	{

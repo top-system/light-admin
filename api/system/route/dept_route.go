@@ -30,7 +30,6 @@ func NewDeptRoutes(
 
 // Setup dept routes
 func (a DeptRoutes) Setup() {
-	a.logger.Zap.Info("Setting up dept routes")
 	api := a.handler.RouterV1.Group("/depts")
 	{
 		api.GET("", a.deptController.Query, a.permMiddleware.RequirePerm("sys:dept:query"))

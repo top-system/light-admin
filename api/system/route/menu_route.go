@@ -30,7 +30,6 @@ func NewMenuRoutes(
 
 // Setup menu routes
 func (a MenuRoutes) Setup() {
-	a.logger.Zap.Info("Setting up menu routes")
 	api := a.handler.RouterV1.Group("/menus")
 	{
 		api.GET("", a.menuController.Query, a.permMiddleware.RequirePerm("sys:menu:query"))

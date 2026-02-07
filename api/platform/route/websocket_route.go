@@ -27,7 +27,6 @@ func NewWebSocketRoute(
 
 // SetupWebSocket 设置WebSocket连接端点（需要在中间件之前调用）
 func (r WebSocketRoute) SetupWebSocket() {
-	r.logger.Zap.Info("Setting up websocket endpoint (before middleware)")
 	// WebSocket 连接端点 (与原Java项目一致: /ws)
 	// 在中间件之前注册，避免中间件干扰 WebSocket 连接
 	r.handler.Engine.GET("/ws", r.websocketController.Connect)
@@ -35,8 +34,6 @@ func (r WebSocketRoute) SetupWebSocket() {
 
 // Setup 设置WebSocket HTTP API路由
 func (r WebSocketRoute) Setup() {
-	r.logger.Zap.Info("Setting up websocket API routes")
-
 	// HTTP API 接口 (用于管理和测试)
 	api := r.handler.RouterV1.Group("/websocket")
 	{
