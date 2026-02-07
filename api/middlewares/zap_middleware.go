@@ -78,6 +78,5 @@ func (a ZapMiddleware) core() echo.MiddlewareFunc {
 }
 
 func (a ZapMiddleware) Setup() {
-	a.logger.Zap.Info("Setting up zap middleware")
 	a.handler.Engine.Use(a.core())
 }

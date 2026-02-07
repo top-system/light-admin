@@ -27,8 +27,6 @@ func NewFileRoute(
 
 // Setup 设置文件路由
 func (r FileRoute) Setup() {
-	r.logger.Zap.Info("Setting up file routes")
-
 	api := r.handler.RouterV1.Group("/files")
 	{
 		api.POST("", r.fileController.Upload)

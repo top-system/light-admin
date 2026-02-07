@@ -30,7 +30,6 @@ func NewNoticeRoutes(
 
 // Setup notice routes
 func (a NoticeRoutes) Setup() {
-	a.logger.Zap.Info("Setting up notice routes")
 	api := a.handler.RouterV1.Group("/notices")
 	{
 		// 管理端接口

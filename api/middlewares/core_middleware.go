@@ -104,6 +104,5 @@ func (a CoreMiddleware) core() echo.MiddlewareFunc {
 }
 
 func (a CoreMiddleware) Setup() {
-	a.logger.Zap.Info("setting up core middleware")
 	a.handler.Engine.Use(a.core())
 }

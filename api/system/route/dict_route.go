@@ -30,7 +30,6 @@ func NewDictRoutes(
 
 // Setup dict routes
 func (a DictRoutes) Setup() {
-	a.logger.Zap.Info("Setting up dict routes")
 	api := a.handler.RouterV1.Group("/dicts")
 	{
 		// 字典相关接口

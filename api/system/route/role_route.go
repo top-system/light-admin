@@ -30,7 +30,6 @@ func NewRoleRoutes(
 
 // Setup role routes
 func (a RoleRoutes) Setup() {
-	a.logger.Zap.Info("Setting up role routes")
 	api := a.handler.RouterV1.Group("/roles")
 	{
 		api.GET("", a.roleController.Query, a.permMiddleware.RequirePerm("sys:role:query"))

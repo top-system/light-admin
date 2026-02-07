@@ -37,7 +37,6 @@ func NewLogMiddleware(
 
 // Setup sets up the log middleware
 func (m LogMiddleware) Setup() {
-	m.logger.Zap.Info("Setting up log middleware")
 	m.handler.Engine.Use(m.Handle())
 }
 

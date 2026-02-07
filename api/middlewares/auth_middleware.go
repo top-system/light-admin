@@ -70,6 +70,5 @@ func (a AuthMiddleware) Setup() {
 		return
 	}
 
-	a.logger.Zap.Info("Setting up auth middleware")
 	a.handler.Engine.Use(a.core())
 }

@@ -38,8 +38,6 @@ func bootstrap(
 
 	lifecycle.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			logger.Zap.Info("Starting Application")
-
 			if err := db.Ping(); err != nil {
 				logger.Zap.Fatalf("Error to ping database connection: %v", err)
 			}
@@ -57,7 +55,6 @@ func bootstrap(
 				wsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					// 拦截 /ws 请求，直接处理 WebSocket，不经过 Echo 中间件
 					if r.URL.Path == "/ws" {
-						logger.Zap.Info("WebSocket request intercepted, bypassing middleware")
 						websocketController.HandleWebSocket(w, r)
 						return
 					}
@@ -70,7 +67,7 @@ func bootstrap(
 					Handler: wsHandler,
 				}
 
-				logger.Zap.Infof("Starting server on %s", config.Http.ListenAddr())
+				logger.Zap.Infof("Server started on %s", config.Http.ListenAddr())
 				if err := server.ListenAndServe(); err != nil {
 					if errors.Is(err, http.ErrServerClosed) {
 						logger.Zap.Debug("Shutting down the Application")

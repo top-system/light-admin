@@ -131,7 +131,7 @@ type CasbinConfig struct {
 }
 
 type DatabaseConfig struct {
-	Engine      string `mapstructure:"Engine"` // mysql, sqlite
+	Engine      string `mapstructure:"Engine"` // mysql, sqlite, postgres
 	Name        string `mapstructure:"Name"`
 	Host        string `mapstructure:"Host"`
 	Port        int    `mapstructure:"Port"`
@@ -153,6 +153,11 @@ func (a *DatabaseConfig) IsSQLite() bool {
 // IsMySQL returns true if the database engine is MySQL
 func (a *DatabaseConfig) IsMySQL() bool {
 	return a.Engine == "" || a.Engine == "mysql"
+}
+
+// IsPostgreSQL returns true if the database engine is PostgreSQL
+func (a *DatabaseConfig) IsPostgreSQL() bool {
+	return a.Engine == "postgres"
 }
 
 // CacheConfig cache configuration
@@ -183,7 +188,16 @@ func (c *CacheConfig) Addr() string {
 }
 
 func (a *DatabaseConfig) DSN() string {
+	if a.IsPostgreSQL() {
+		return a.PostgresDSN()
+	}
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", a.Username, a.Password, a.Host, a.Port, a.Name, a.Parameters)
+}
+
+// PostgresDSN returns the PostgreSQL connection string
+func (a *DatabaseConfig) PostgresDSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Shanghai",
+		a.Host, a.Port, a.Username, a.Password, a.Name)
 }
 
 func (a *HttpConfig) ListenAddr() string {

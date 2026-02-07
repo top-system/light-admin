@@ -102,7 +102,6 @@ func (a PermissionMiddleware) Setup() {
 		return
 	}
 
-	a.logger.Zap.Info("Setting up permission middleware")
 	a.handler.Engine.Use(a.core())
 }
 
