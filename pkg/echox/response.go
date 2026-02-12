@@ -40,14 +40,9 @@ func (a Response) JSON(ctx echo.Context) error {
 	}
 
 	if err, ok := a.Message.(error); ok {
-		if errors.Is(err, errors.DatabaseInternalError) {
-			a.Code = http.StatusInternalServerError
+		if status := errors.HTTPStatusCode(err); status != 0 {
+			a.Code = status
 		}
-
-		if errors.Is(err, errors.DatabaseRecordNotFound) {
-			a.Code = http.StatusNotFound
-		}
-
 		a.Message = err.Error()
 	}
 
