@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -469,6 +470,8 @@ func (b *Broker) sendFrame(session *Session, frame *Frame) error {
 	session.mu.Lock()
 	defer session.mu.Unlock()
 
+	// 设置写超时，防止慢客户端导致 goroutine 阻塞
+	session.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	err := session.Conn.WriteMessage(websocket.TextMessage, data)
 	if err != nil {
 		b.logger.Error("Failed to send frame",

@@ -36,6 +36,9 @@ func bootstrap(
 		logger.Zap.Fatalf("Error to get database connection: %v", err)
 	}
 
+	// server 提升到外层，供 OnStop 使用
+	var server *http.Server
+
 	lifecycle.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			if err := db.Ping(); err != nil {
@@ -46,6 +49,7 @@ func bootstrap(
 			db.SetMaxOpenConns(config.Database.MaxOpenConns)
 			db.SetMaxIdleConns(config.Database.MaxIdleConns)
 			db.SetConnMaxLifetime(time.Duration(config.Database.MaxLifetime) * time.Second)
+			db.SetConnMaxIdleTime(10 * time.Minute)
 
 			go func() {
 				middlewares.Setup()
@@ -62,9 +66,13 @@ func bootstrap(
 					handler.Engine.ServeHTTP(w, r)
 				})
 
-				server := &http.Server{
-					Addr:    config.Http.ListenAddr(),
-					Handler: wsHandler,
+				server = &http.Server{
+					Addr:           config.Http.ListenAddr(),
+					Handler:        wsHandler,
+					ReadTimeout:    15 * time.Second,
+					WriteTimeout:   15 * time.Second,
+					IdleTimeout:    60 * time.Second,
+					MaxHeaderBytes: 1 << 20, // 1MB
 				}
 
 				logger.Zap.Infof("Server started on %s", config.Http.ListenAddr())
@@ -79,10 +87,18 @@ func bootstrap(
 
 			return nil
 		},
-		OnStop: func(context.Context) error {
+		OnStop: func(ctx context.Context) error {
 			logger.Zap.Info("Stopping Application")
 
-			handler.Engine.Close()
+			// Graceful shutdown: 等待在途请求完成（最多30秒）
+			if server != nil {
+				shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+				defer cancel()
+				if err := server.Shutdown(shutdownCtx); err != nil {
+					logger.Zap.Errorf("Server forced shutdown: %v", err)
+				}
+			}
+
 			db.Close()
 			return nil
 		},

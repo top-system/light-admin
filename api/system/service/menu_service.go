@@ -274,7 +274,7 @@ func (a MenuService) UpdateChildTreePath(oMenu, nMenu *system.Menu) error {
 // ListMenuOptions 获取菜单下拉选项（用于父级菜单选择）
 func (a MenuService) ListMenuOptions(onlyParent bool) ([]dto.MenuOption, error) {
 	param := &system.MenuQueryParam{
-		PaginationParam: dto.PaginationParam{PageNum: 1, PageSize: 9999},
+		PaginationParam: dto.PaginationParam{PageNum: 1, PageSize: 1000},
 		OrderParam:      dto.OrderParam{Key: "sort", Direction: dto.OrderByASC},
 	}
 
@@ -295,26 +295,39 @@ func (a MenuService) ListMenuOptions(onlyParent bool) ([]dto.MenuOption, error) 
 		menus = filtered
 	}
 
-	return a.buildMenuOptions(menus, 0), nil
+	// 预构建 parentID -> children 映射（O(n) 复杂度）
+	childMap := buildMenuChildMap(menus)
+	return buildMenuOptions(0, childMap), nil
 }
 
-func (a MenuService) buildMenuOptions(menus system.Menus, parentID uint64) []dto.MenuOption {
-	options := make([]dto.MenuOption, 0)
-
+// buildMenuChildMap 预构建 parentID -> children 映射
+func buildMenuChildMap(menus system.Menus) map[uint64][]*system.Menu {
+	childMap := make(map[uint64][]*system.Menu, len(menus))
 	for _, menu := range menus {
-		if menu.ParentID == parentID {
-			option := dto.MenuOption{
-				Value: menu.ID,
-				Label: menu.Name,
-			}
+		childMap[menu.ParentID] = append(childMap[menu.ParentID], menu)
+	}
+	return childMap
+}
 
-			children := a.buildMenuOptions(menus, menu.ID)
-			if len(children) > 0 {
-				option.Children = children
-			}
+func buildMenuOptions(parentID uint64, childMap map[uint64][]*system.Menu) []dto.MenuOption {
+	children, ok := childMap[parentID]
+	if !ok {
+		return nil
+	}
 
-			options = append(options, option)
+	options := make([]dto.MenuOption, 0, len(children))
+	for _, menu := range children {
+		option := dto.MenuOption{
+			Value: menu.ID,
+			Label: menu.Name,
 		}
+
+		subChildren := buildMenuOptions(menu.ID, childMap)
+		if len(subChildren) > 0 {
+			option.Children = subChildren
+		}
+
+		options = append(options, option)
 	}
 
 	return options
@@ -328,7 +341,7 @@ func (a MenuService) GetUserRoutes(roleIDs []uint64, isSuperAdmin bool) ([]*dto.
 	if isSuperAdmin {
 		// 超级管理员获取所有菜单（包括隐藏的，前端自己判断）
 		menuQR, err := a.menuRepository.Query(&system.MenuQueryParam{
-			PaginationParam: dto.PaginationParam{PageNum: 1, PageSize: 9999},
+			PaginationParam: dto.PaginationParam{PageNum: 1, PageSize: 1000},
 			OrderParam:      dto.OrderParam{Key: "sort", Direction: dto.OrderByASC},
 		})
 		if err != nil {
@@ -362,7 +375,9 @@ func (a MenuService) GetUserRoutes(roleIDs []uint64, isSuperAdmin bool) ([]*dto.
 		return routeMenus[i].Sort < routeMenus[j].Sort
 	})
 
-	return a.buildRoutes(routeMenus, 0), nil
+	// 预构建 parentID -> children 映射（O(n) 复杂度）
+	routeChildMap := buildMenuChildMap(routeMenus)
+	return a.buildRoutes(routeChildMap, 0), nil
 }
 
 func (a MenuService) fillParentMenus(menus system.Menus) (system.Menus, error) {
@@ -389,38 +404,41 @@ func (a MenuService) fillParentMenus(menus system.Menus) (system.Menus, error) {
 	return menus, nil
 }
 
-func (a MenuService) buildRoutes(menus system.Menus, parentID uint64) []*dto.RouteVO {
-	routes := make([]*dto.RouteVO, 0)
+func (a MenuService) buildRoutes(childMap map[uint64][]*system.Menu, parentID uint64) []*dto.RouteVO {
+	menuChildren, ok := childMap[parentID]
+	if !ok {
+		return nil
+	}
 
-	for _, menu := range menus {
-		if menu.ParentID == parentID {
-			children := a.buildRoutes(menus, menu.ID)
+	routes := make([]*dto.RouteVO, 0, len(menuChildren))
 
-			// 顶级路由处理
-			if parentID == 0 {
-				route := a.buildTopLevelRoute(menu, children)
-				routes = append(routes, route)
-			} else {
-				// 非顶级路由，正常构建
-				route := &dto.RouteVO{
-					Name:      menu.RouteName,
-					Path:      menu.RoutePath,
-					Component: menu.Component,
-					Redirect:  menu.Redirect,
-					Meta: dto.RouteMeta{
-						Title:      menu.Name,
-						Icon:       menu.Icon,
-						Hidden:     menu.Visible != 1,
-						KeepAlive:  menu.KeepAlive == 1,
-						AlwaysShow: menu.AlwaysShow == 1,
-						Params:     menu.GetParamsMap(),
-					},
-				}
-				if len(children) > 0 {
-					route.Children = children
-				}
-				routes = append(routes, route)
+	for _, menu := range menuChildren {
+		children := a.buildRoutes(childMap, menu.ID)
+
+		// 顶级路由处理
+		if parentID == 0 {
+			route := a.buildTopLevelRoute(menu, children)
+			routes = append(routes, route)
+		} else {
+			// 非顶级路由，正常构建
+			route := &dto.RouteVO{
+				Name:      menu.RouteName,
+				Path:      menu.RoutePath,
+				Component: menu.Component,
+				Redirect:  menu.Redirect,
+				Meta: dto.RouteMeta{
+					Title:      menu.Name,
+					Icon:       menu.Icon,
+					Hidden:     menu.Visible != 1,
+					KeepAlive:  menu.KeepAlive == 1,
+					AlwaysShow: menu.AlwaysShow == 1,
+					Params:     menu.GetParamsMap(),
+				},
 			}
+			if len(children) > 0 {
+				route.Children = children
+			}
+			routes = append(routes, route)
 		}
 	}
 

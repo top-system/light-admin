@@ -43,7 +43,6 @@ func NewDatabase(config Config, logger Logger) Database {
 			SingularTable: true,
 			TablePrefix:   config.Database.TablePrefix + "_",
 		},
-		QueryFields: true,
 	}
 
 	switch {
@@ -71,6 +70,7 @@ func NewDatabase(config Config, logger Logger) Database {
 	sqlDB.SetMaxIdleConns(config.Database.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(config.Database.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(config.Database.MaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
 
 	if config.Log.Level == "debug" {
 		db = db.Debug()

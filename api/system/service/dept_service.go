@@ -67,41 +67,54 @@ func (a DeptService) GetDeptList(param *system.DeptQueryParam) ([]*system.DeptVO
 		}
 	}
 
-	// 递归生成部门树形列表
+	// 预构建 parentID -> children 映射（O(n) 复杂度）
+	childMap := buildDeptChildMap(deptList)
+
 	var result []*system.DeptVO
 	for _, rootId := range rootIds {
-		children := a.recurDeptList(rootId, deptList)
+		children := buildDeptTree(rootId, childMap)
 		result = append(result, children...)
 	}
 
 	return result, nil
 }
 
-// recurDeptList 递归生成部门树形列表
-func (a DeptService) recurDeptList(parentId uint64, deptList system.Depts) []*system.DeptVO {
-	var result []*system.DeptVO
+// buildDeptTree 使用 map 预构建 O(n) 复杂度的部门树
+func buildDeptTree(parentId uint64, childMap map[uint64][]*system.Dept) []*system.DeptVO {
+	children, ok := childMap[parentId]
+	if !ok {
+		return nil
+	}
 
-	for _, dept := range deptList {
-		if dept.ParentID == parentId {
-			deptVO := &system.DeptVO{
-				ID:         dept.ID,
-				Name:       dept.Name,
-				Code:       dept.Code,
-				ParentID:   dept.ParentID,
-				Sort:       dept.Sort,
-				Status:     dept.Status,
-				CreateTime: dept.CreateTime,
-				UpdateTime: dept.UpdateTime,
-			}
-			children := a.recurDeptList(dept.ID, deptList)
-			if len(children) > 0 {
-				deptVO.Children = children
-			}
-			result = append(result, deptVO)
+	result := make([]*system.DeptVO, 0, len(children))
+	for _, dept := range children {
+		deptVO := &system.DeptVO{
+			ID:         dept.ID,
+			Name:       dept.Name,
+			Code:       dept.Code,
+			ParentID:   dept.ParentID,
+			Sort:       dept.Sort,
+			Status:     dept.Status,
+			CreateTime: dept.CreateTime,
+			UpdateTime: dept.UpdateTime,
 		}
+		subChildren := buildDeptTree(dept.ID, childMap)
+		if len(subChildren) > 0 {
+			deptVO.Children = subChildren
+		}
+		result = append(result, deptVO)
 	}
 
 	return result
+}
+
+// buildChildMap 预构建 parentID -> children 映射
+func buildDeptChildMap(deptList system.Depts) map[uint64][]*system.Dept {
+	childMap := make(map[uint64][]*system.Dept, len(deptList))
+	for _, dept := range deptList {
+		childMap[dept.ParentID] = append(childMap[dept.ParentID], dept)
+	}
+	return childMap
 }
 
 // ListDeptOptions 部门下拉选项
@@ -135,32 +148,36 @@ func (a DeptService) ListDeptOptions() ([]*system.DeptOption, error) {
 		}
 	}
 
-	// 递归生成部门下拉选项
+	// 预构建 parentID -> children 映射（O(n) 复杂度）
+	childMap := buildDeptChildMap(deptList)
+
 	var result []*system.DeptOption
 	for _, rootId := range rootIds {
-		children := a.recurDeptOptions(rootId, deptList)
+		children := buildDeptOptions(rootId, childMap)
 		result = append(result, children...)
 	}
 
 	return result, nil
 }
 
-// recurDeptOptions 递归生成部门下拉选项
-func (a DeptService) recurDeptOptions(parentId uint64, deptList system.Depts) []*system.DeptOption {
-	var result []*system.DeptOption
+// buildDeptOptions 使用 map 预构建 O(n) 复杂度的部门下拉选项
+func buildDeptOptions(parentId uint64, childMap map[uint64][]*system.Dept) []*system.DeptOption {
+	children, ok := childMap[parentId]
+	if !ok {
+		return nil
+	}
 
-	for _, dept := range deptList {
-		if dept.ParentID == parentId {
-			option := &system.DeptOption{
-				Value: dept.ID,
-				Label: dept.Name,
-			}
-			children := a.recurDeptOptions(dept.ID, deptList)
-			if len(children) > 0 {
-				option.Children = children
-			}
-			result = append(result, option)
+	result := make([]*system.DeptOption, 0, len(children))
+	for _, dept := range children {
+		option := &system.DeptOption{
+			Value: dept.ID,
+			Label: dept.Name,
 		}
+		subChildren := buildDeptOptions(dept.ID, childMap)
+		if len(subChildren) > 0 {
+			option.Children = subChildren
+		}
+		result = append(result, option)
 	}
 
 	return result

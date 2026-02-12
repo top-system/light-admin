@@ -7,7 +7,7 @@ import (
 // Log 系统操作日志模型
 type Log struct {
 	ID              uint64       `gorm:"primaryKey;autoIncrement" json:"id"`
-	Module          string       `gorm:"column:module;size:50;not null" json:"module"`
+	Module          string       `gorm:"column:module;size:50;not null;index:idx_module" json:"module"`
 	RequestMethod   string       `gorm:"column:request_method;size:64;not null" json:"requestMethod"`
 	RequestParams   string       `gorm:"column:request_params;type:text" json:"requestParams"`
 	ResponseContent string       `gorm:"column:response_content;type:text" json:"responseContent"`
@@ -21,8 +21,8 @@ type Log struct {
 	Browser         string       `gorm:"column:browser;size:100" json:"browser"`
 	BrowserVersion  string       `gorm:"column:browser_version;size:100" json:"browserVersion"`
 	OS              string       `gorm:"column:os;size:100" json:"os"`
-	CreateBy        uint64       `gorm:"column:create_by" json:"createBy"`
-	CreateTime      dto.DateTime `gorm:"column:create_time;autoCreateTime" json:"createTime"`
+	CreateBy        uint64       `gorm:"column:create_by;index:idx_create_by" json:"createBy"`
+	CreateTime      dto.DateTime `gorm:"column:create_time;autoCreateTime;index:idx_create_time" json:"createTime"`
 }
 
 // TableName 指定表名

@@ -14,9 +14,9 @@ import (
 type Menu struct {
 	ID         uint64       `gorm:"primaryKey;autoIncrement" json:"id"`
 	ParentID   uint64       `gorm:"column:parent_id;not null;default:0;index" json:"parentId"`
-	TreePath   string       `gorm:"column:tree_path;size:255" json:"treePath"`
+	TreePath   string       `gorm:"column:tree_path;size:255;index:idx_tree_path" json:"treePath"`
 	Name       string       `gorm:"column:name;size:64;not null" json:"name"`
-	Type       int          `gorm:"column:type;not null" json:"type"`
+	Type       int          `gorm:"column:type;not null;index:idx_type" json:"type"`
 	RouteName  string       `gorm:"column:route_name;size:255" json:"routeName"`
 	RoutePath  string       `gorm:"column:route_path;size:128" json:"routePath"`
 	Component  string       `gorm:"column:component;size:128" json:"component"`

@@ -99,7 +99,28 @@ func (c WebSocketController) registerHandlers() {
 
 // HandleWebSocket 处理原始 HTTP WebSocket 请求（绕过 Echo 中间件）
 func (c WebSocketController) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	c.logger.Zap.Infof("WebSocket upgrade request from: %s (bypassing middleware)", r.RemoteAddr)
+	c.logger.Zap.Infof("WebSocket upgrade request from: %s", r.RemoteAddr)
+
+	// HTTP 层 JWT 校验：从 query 参数或 Authorization header 获取 token
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		auth := r.Header.Get("Authorization")
+		if len(auth) > 7 && auth[:7] == "Bearer " {
+			token = auth[7:]
+		}
+	}
+
+	// 验证 token（如果提供了的话，提前拒绝无效连接）
+	var preAuthUsername string
+	if token != "" {
+		claims, err := c.authService.ParseToken(token)
+		if err != nil {
+			c.logger.Zap.Warnf("WebSocket auth failed: %v", err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		preAuthUsername = claims.Username
+	}
 
 	// 升级为WebSocket连接
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -108,24 +129,31 @@ func (c WebSocketController) HandleWebSocket(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// 设置读写超时
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+
 	c.logger.Zap.Infof("WebSocket upgrade successful")
 
 	sessionID := uuid.New().String()
 
-	// 创建会话（未认证状态，Username 为空）
+	// 创建会话
 	session := &stomp.Session{
 		ID:            sessionID,
-		Username:      "", // 认证成功后会设置
+		Username:      preAuthUsername,
 		Conn:          conn,
 		Subscriptions: make(map[string]string),
 		ConnectTime:   time.Now().UnixMilli(),
-		Authenticated: false,
+		Authenticated: preAuthUsername != "",
 	}
 
 	// 注册会话
 	c.ws.Broker.AddSession(session)
 
-	c.logger.Zap.Infof("WebSocket connected (pending auth): session=%s", sessionID)
+	c.logger.Zap.Infof("WebSocket connected: session=%s, preAuth=%v", sessionID, preAuthUsername != "")
 
 	// 直接处理消息
 	c.handleMessages(session)

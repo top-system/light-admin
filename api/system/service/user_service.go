@@ -17,6 +17,7 @@ import (
 type UserService struct {
 	logger             lib.Logger
 	config             lib.Config
+	db                 lib.Database
 	userRepository     repository.UserRepository
 	userRoleRepository repository.UserRoleRepository
 	menuRepository     repository.MenuRepository
@@ -30,6 +31,7 @@ type UserService struct {
 func NewUserService(
 	logger lib.Logger,
 	config lib.Config,
+	db lib.Database,
 	userRepository repository.UserRepository,
 	userRoleRepository repository.UserRoleRepository,
 	roleRepository repository.RoleRepository,
@@ -41,6 +43,7 @@ func NewUserService(
 	return UserService{
 		logger:             logger,
 		config:             config,
+		db:                 db,
 		userRepository:     userRepository,
 		userRoleRepository: userRoleRepository,
 		roleRepository:     roleRepository,
@@ -135,9 +138,23 @@ func (a UserService) Verify(username, password string) (*system.User, error) {
 		return nil, err
 	}
 
-	if user.Password != hash.SHA256(password) {
-		return nil, errors.UserInvalidPassword
-	} else if user.Status != 1 {
+	// 支持 bcrypt 和旧版 SHA256 两种密码格式
+	if hash.IsBcryptHash(user.Password) {
+		if !hash.BcryptCheck(password, user.Password) {
+			return nil, errors.UserInvalidPassword
+		}
+	} else {
+		// 旧版 SHA256 密码兼容
+		if user.Password != hash.SHA256(password) {
+			return nil, errors.UserInvalidPassword
+		}
+		// 自动升级为 bcrypt
+		if newHash, err := hash.BcryptHash(password); err == nil {
+			_ = a.userRepository.UpdatePassword(user.ID, newHash)
+		}
+	}
+
+	if user.Status != 1 {
 		return nil, errors.UserIsDisable
 	}
 
@@ -355,7 +372,11 @@ func (a UserService) Create(user *system.User) (uint64, error) {
 		return 0, err
 	}
 
-	user.Password = hash.SHA256(user.Password)
+	hashedPassword, err := hash.BcryptHash(user.Password)
+	if err != nil {
+		return 0, err
+	}
+	user.Password = hashedPassword
 
 	if err := a.userRepository.Create(user); err != nil {
 		return 0, err
@@ -384,7 +405,11 @@ func (a UserService) Update(id uint64, user *system.User) error {
 	}
 
 	if user.Password != "" {
-		user.Password = hash.SHA256(user.Password)
+		hashedPassword, err := hash.BcryptHash(user.Password)
+		if err != nil {
+			return err
+		}
+		user.Password = hashedPassword
 	} else {
 		user.Password = oUser.Password
 	}
@@ -394,17 +419,33 @@ func (a UserService) Update(id uint64, user *system.User) error {
 
 	// Update user role associations if provided
 	if user.RoleIds != nil {
+		// 使用事务保证角色更新的原子性
+		tx := a.db.ORM.Begin()
+		svc := a.WithTrx(tx)
+
 		// Delete existing associations
-		if err := a.userRoleRepository.DeleteByUserID(id); err != nil {
+		if err := svc.userRoleRepository.DeleteByUserID(id); err != nil {
+			tx.Rollback()
 			return err
 		}
 
-		if err := a.assignRolesToUser(id, user.RoleIds); err != nil {
+		if err := svc.assignRolesToUser(id, user.RoleIds); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		if err := svc.userRepository.Update(id, user); err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		if err := tx.Commit().Error; err != nil {
 			return err
 		}
 
 		// 清除用户权限缓存
 		a.permissionCache.InvalidateUserCache(id)
+		return nil
 	}
 
 	if err := a.userRepository.Update(id, user); err != nil {
@@ -462,7 +503,11 @@ func (a UserService) ResetPassword(id uint64, password string) error {
 		return err
 	}
 
-	return a.userRepository.UpdatePassword(id, hash.SHA256(password))
+	hashedPassword, err := hash.BcryptHash(password)
+	if err != nil {
+		return err
+	}
+	return a.userRepository.UpdatePassword(id, hashedPassword)
 }
 
 // GetUserForm 获取用户表单数据
@@ -491,7 +536,7 @@ func (a UserService) ListUserOptions() ([]*system.UserOption, error) {
 	status := 1
 	qr, err := a.Query(&system.UserQueryParam{
 		Status:          &status,
-		PaginationParam: dto.PaginationParam{PageSize: 999, PageNum: 1},
+		PaginationParam: dto.PaginationParam{PageSize: 1000, PageNum: 1},
 	})
 	if err != nil {
 		return nil, err

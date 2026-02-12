@@ -10,6 +10,7 @@ var Module = fx.Options(
 	fx.Provide(NewAuthMiddleware),
 	fx.Provide(NewCasbinMiddleware),
 	fx.Provide(NewLogMiddleware),
+	fx.Provide(NewRateLimitMiddleware),
 	fx.Provide(NewMiddlewares),
 )
 
@@ -30,9 +31,11 @@ func NewMiddlewares(
 	authMiddleware AuthMiddleware,
 	casbinMiddleware CasbinMiddleware,
 	logMiddleware LogMiddleware,
+	rateLimitMiddleware RateLimitMiddleware,
 ) Middlewares {
 	return Middlewares{
 		coreMiddleware,
+		rateLimitMiddleware,
 		zapMiddleware,
 		corsMiddleware,
 		authMiddleware,

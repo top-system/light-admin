@@ -13,16 +13,16 @@ type User struct {
 	Nickname   string       `gorm:"column:nickname;size:64" json:"nickname"`
 	Gender     int          `gorm:"column:gender;default:1" json:"gender"`
 	Password   string       `gorm:"column:password;size:100" json:"password,omitempty"`
-	DeptID     uint64       `gorm:"column:dept_id" json:"deptId"`
+	DeptID     uint64       `gorm:"column:dept_id;index:idx_dept_id" json:"deptId"`
 	Avatar     string       `gorm:"column:avatar;size:255" json:"avatar"`
 	Mobile     string       `gorm:"column:mobile;size:20" json:"mobile"`
-	Status     int          `gorm:"column:status;default:1" json:"status"`
+	Status     int          `gorm:"column:status;default:1;index:idx_status" json:"status"`
 	Email      string       `gorm:"column:email;size:128" json:"email"`
-	CreateTime dto.DateTime `gorm:"column:create_time;autoCreateTime" json:"createTime"`
+	CreateTime dto.DateTime `gorm:"column:create_time;autoCreateTime;index:idx_create_time" json:"createTime"`
 	CreateBy   uint64       `gorm:"column:create_by" json:"createBy"`
 	UpdateTime dto.DateTime `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
 	UpdateBy   uint64       `gorm:"column:update_by" json:"updateBy"`
-	IsDeleted  int          `gorm:"column:is_deleted;default:0" json:"isDeleted"`
+	IsDeleted  int          `gorm:"column:is_deleted;default:0;index:idx_is_deleted" json:"isDeleted"`
 	OpenID     string       `gorm:"column:openid;size:28" json:"openid,omitempty"`
 
 	// 非数据库字段
