@@ -98,8 +98,20 @@ func (a PermissionCache) InvalidateRoleCache(roleID uint64) {
 		return
 	}
 
-	// 清除这些用户的权限缓存
+	if len(userIDs) == 0 {
+		return
+	}
+
+	// 批量收集所有需要删除的 cache key，一次性删除
+	keys := make([]string, 0, len(userIDs)*2)
 	for _, userID := range userIDs {
-		a.InvalidateUserCache(userID)
+		keys = append(keys,
+			fmt.Sprintf(permCacheKeyUserRoles, userID),
+			fmt.Sprintf(permCacheKeyUserPerms, userID),
+		)
+	}
+
+	if _, err := a.cache.Delete(keys...); err != nil {
+		a.logger.Zap.Warn("Failed to batch invalidate role cache: " + err.Error())
 	}
 }

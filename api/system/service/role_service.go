@@ -242,7 +242,7 @@ func (a RoleService) assignMenusToRole(roleID uint64, menuIDs []uint64) error {
 func (a RoleService) ListRoleOptions() ([]system.RoleOption, error) {
 	qr, err := a.roleRepository.Query(&system.RoleQueryParam{
 		Status:          1,
-		PaginationParam: dto.PaginationParam{PageSize: 999, PageNum: 1},
+		PaginationParam: dto.PaginationParam{PageSize: 1000, PageNum: 1},
 	})
 
 	if err != nil {

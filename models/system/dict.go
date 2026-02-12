@@ -9,13 +9,13 @@ type Dict struct {
 	ID         uint64       `gorm:"primaryKey;autoIncrement" json:"id"`
 	DictCode   string       `gorm:"column:dict_code;size:100;not null;uniqueIndex:uk_dict_code" json:"dictCode"`
 	Name       string       `gorm:"column:name;size:100;not null" json:"name"`
-	Status     int          `gorm:"column:status;default:1" json:"status"`
+	Status     int          `gorm:"column:status;default:1;index:idx_status" json:"status"`
 	Remark     string       `gorm:"column:remark;size:255" json:"remark"`
 	CreateBy   uint64       `gorm:"column:create_by" json:"createBy"`
 	CreateTime dto.DateTime `gorm:"column:create_time;autoCreateTime" json:"createTime"`
 	UpdateBy   uint64       `gorm:"column:update_by" json:"updateBy"`
 	UpdateTime dto.DateTime `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
-	IsDeleted  int          `gorm:"column:is_deleted;default:0" json:"isDeleted"`
+	IsDeleted  int          `gorm:"column:is_deleted;default:0;index:idx_is_deleted" json:"isDeleted"`
 }
 
 // TableName 指定表名

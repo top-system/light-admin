@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"gorm.io/gorm"
 
 	"github.com/top-system/light-admin/api/system/repository"
+	apperrors "github.com/top-system/light-admin/errors"
 	"github.com/top-system/light-admin/lib"
 	"github.com/top-system/light-admin/models/system"
 	"github.com/top-system/light-admin/pkg/downloader"
@@ -141,11 +141,8 @@ func (a DownloadService) WithTrx(trxHandle *gorm.DB) DownloadService {
 }
 
 // Query 分页查询下载任务（从队列任务表查询）
+// 注意：任务状态同步已移至后台定时任务，不再在每次查询时触发
 func (a DownloadService) Query(param *system.DownloadTaskQueryParam) (*system.DownloadTaskQueryResult, error) {
-	// 先同步活跃任务状态
-	ctx := context.Background()
-	_ = a.SyncAllActiveTasks(ctx)
-
 	return a.downloadRepository.Query(param)
 }
 
@@ -217,7 +214,7 @@ func (a DownloadService) GetDetail(ctx context.Context, id uint64) (*system.Down
 func (a DownloadService) Create(ctx context.Context, form *system.DownloadTaskCreateForm, ownerID uint64) (*system.DownloadTask, error) {
 	// 检查队列是否启用
 	if a.taskQueue.Queue == nil {
-		return nil, fmt.Errorf("task queue is not enabled, please enable it in config")
+		return nil, apperrors.DownloadQueueNotEnabled
 	}
 
 	// 如果没有指定下载器，使用默认下载器
@@ -225,7 +222,7 @@ func (a DownloadService) Create(ctx context.Context, form *system.DownloadTaskCr
 	if downloaderName == "" {
 		downloaderName = a.getDefaultDownloader()
 		if downloaderName == "" {
-			return nil, fmt.Errorf("no downloader configured, please configure at least one downloader in config")
+			return nil, apperrors.DownloadNoDownloaderConfig
 		}
 	}
 
@@ -234,7 +231,7 @@ func (a DownloadService) Create(ctx context.Context, form *system.DownloadTaskCr
 	a.mu.RUnlock()
 
 	if !ok {
-		return nil, fmt.Errorf("downloader %s not found or not configured", downloaderName)
+		return nil, apperrors.Wrapf(apperrors.DownloadDownloaderNotFound, "downloader: %s", downloaderName)
 	}
 	form.Downloader = downloaderName // 回填下载器名称
 
@@ -245,7 +242,7 @@ func (a DownloadService) Create(ctx context.Context, form *system.DownloadTaskCr
 
 	queueTask, err := queue.NewRemoteDownloadTask(ctx, form.URL, form.Downloader, form.Options, owner)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create queue task: %w", err)
+		return nil, apperrors.Wrap(err, "failed to create queue task")
 	}
 
 	// 设置下载器
@@ -255,7 +252,7 @@ func (a DownloadService) Create(ctx context.Context, form *system.DownloadTaskCr
 
 	// 提交到队列
 	if err := a.taskQueue.Queue.QueueTask(ctx, queueTask); err != nil {
-		return nil, fmt.Errorf("failed to queue download task: %w", err)
+		return nil, apperrors.Wrap(err, "failed to queue download task")
 	}
 
 	// 同时保存到下载任务表（用于界面查询）
@@ -343,7 +340,7 @@ func (a DownloadService) SetFilesToDownload(ctx context.Context, id uint64, form
 	a.mu.RUnlock()
 
 	if !ok {
-		return fmt.Errorf("downloader %s not found", task.Downloader)
+		return apperrors.Wrapf(apperrors.DownloadDownloaderNotFound, "downloader: %s", task.Downloader)
 	}
 
 	handle := &downloader.TaskHandle{
@@ -561,7 +558,7 @@ func (a DownloadService) TestDownloader(ctx context.Context, name string) (strin
 	a.mu.RUnlock()
 
 	if !ok {
-		return "", fmt.Errorf("downloader %s not found", name)
+		return "", apperrors.Wrapf(apperrors.DownloadDownloaderNotFound, "downloader: %s", name)
 	}
 
 	return dl.Test(ctx)

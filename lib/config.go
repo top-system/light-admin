@@ -92,8 +92,9 @@ type CaptchaConfig struct {
 }
 
 type HttpConfig struct {
-	Host string `mapstructure:"Host" validate:"ipv4"`
-	Port int    `mapstructure:"Port" validate:"gte=1,lte=65535"`
+	Host         string   `mapstructure:"Host" validate:"ipv4"`
+	Port         int      `mapstructure:"Port" validate:"gte=1,lte=65535"`
+	AllowOrigins []string `mapstructure:"AllowOrigins"` // CORS 允许的域名列表，为空则允许所有
 }
 
 // LogLevel     : debug,info,warn,error,dpanic,panic,fatal
@@ -202,7 +203,7 @@ func (a *DatabaseConfig) PostgresDSN() string {
 
 func (a *HttpConfig) ListenAddr() string {
 	if err := validator.New().Struct(a); err != nil {
-		return "0.0.0.0:5100"
+		panic(fmt.Sprintf("Invalid HTTP configuration: %v\nPlease check Http.Host (must be valid IPv4) and Http.Port (must be 1-65535) in your config file.", err))
 	}
 
 	return fmt.Sprintf("%s:%d", a.Host, a.Port)

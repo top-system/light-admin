@@ -105,8 +105,8 @@ func toWriter(config Config) zapcore.WriteSyncer {
 		zapcore.AddSync(&lumberjack.Logger{ // 文件切割
 			Filename:   filepath.Join(fp, config.Name) + ".log",
 			MaxSize:    100,
-			MaxAge:     0,
-			MaxBackups: 0,
+			MaxAge:     30,
+			MaxBackups: 10,
 			LocalTime:  true,
 			Compress:   true,
 		}),

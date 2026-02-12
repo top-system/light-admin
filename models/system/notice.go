@@ -18,7 +18,7 @@ type Notice struct {
 	TargetType    int              `gorm:"column:target_type;not null" json:"targetType"`
 	TargetUserIds string           `gorm:"column:target_user_ids;size:255" json:"targetUserIds"`
 	PublisherId   uint64           `gorm:"column:publisher_id" json:"publisherId"`
-	PublishStatus int              `gorm:"column:publish_status;default:0" json:"publishStatus"`
+	PublishStatus int              `gorm:"column:publish_status;default:0;index:idx_publish_status" json:"publishStatus"`
 	PublishTime   dto.NullDateTime `gorm:"column:publish_time" json:"publishTime"`
 	RevokeTime    dto.NullDateTime `gorm:"column:revoke_time" json:"revokeTime"`
 	CreateBy      uint64           `gorm:"column:create_by;not null" json:"createBy"`

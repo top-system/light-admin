@@ -20,6 +20,7 @@ type LogMiddleware struct {
 	handler    lib.HttpHandler
 	logger     lib.Logger
 	logService service.LogService
+	logCh      chan *system.Log // 日志写入 channel，替代无限制 goroutine
 }
 
 // NewLogMiddleware creates new log middleware
@@ -28,10 +29,27 @@ func NewLogMiddleware(
 	logger lib.Logger,
 	logService service.LogService,
 ) LogMiddleware {
-	return LogMiddleware{
+	m := LogMiddleware{
 		handler:    handler,
 		logger:     logger,
 		logService: logService,
+		logCh:      make(chan *system.Log, 256), // 缓冲 256 条日志
+	}
+
+	// 启动日志写入 worker（2个 worker 处理异步日志）
+	for i := 0; i < 2; i++ {
+		go m.logWorker()
+	}
+
+	return m
+}
+
+// logWorker 日志写入协程（worker pool 模式，替代每次请求 spawn goroutine）
+func (m LogMiddleware) logWorker() {
+	for log := range m.logCh {
+		if err := m.logService.Create(log); err != nil {
+			m.logger.Zap.Errorf("Failed to save log: %v", err)
+		}
 	}
 }
 
@@ -217,12 +235,12 @@ func (m LogMiddleware) Handle() echo.MiddlewareFunc {
 				CreateBy:        createBy,
 			}
 
-			// 异步保存日志
-			go func() {
-				if saveErr := m.logService.Create(log); saveErr != nil {
-					m.logger.Zap.Errorf("Failed to save log: %v", saveErr)
-				}
-			}()
+			// 异步保存日志（通过 worker pool channel）
+			select {
+			case m.logCh <- log:
+			default:
+				m.logger.Zap.Warn("Log channel full, dropping log entry")
+			}
 
 			return err
 		}
